@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AML Widget Scenarios</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: #161614;
+            color: #e8e8e6;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+            font-size: 13px;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #7c9a6d;
+            font-size: 24px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            color: #888880;
+            margin-bottom: 30px;
+        }
+        
+        .scenarios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+            gap: 20px;
+        }
+        
+        .scenario {
+            background: #1c1c1a;
+            border: 1px solid #2a2a28;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .scenario-header {
+            padding: 12px 16px;
+            background: #252523;
+            border-bottom: 1px solid #2a2a28;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .scenario-name {
+            font-weight: 600;
+            color: #7c9a6d;
+            font-size: 14px;
+        }
+        
+        .scenario-number {
+            color: #888880;
+            font-size: 12px;
+        }
+        
+        .scenario-content {
+            padding: 16px;
+        }
+        
+        /* ALL WIDGET STYLES (same as before) */
+        .trait-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: rgba(124, 154, 109, 0.12);
+            border: 1px solid rgba(124, 154, 109, 0.2);
+            border-radius: 6px;
+            color: #7c9a6d;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            margin: 2px;
+        }
+        
+        .trait-button:hover {
+            background: rgba(124, 154, 109, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .trait-code-block {
+            margin: 10px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(22, 22, 20, 0.8);
+            border: 1px solid rgba(124, 154, 109, 0.08);
+        }
+        
+        .trait-code-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(26, 26, 24, 0.6);
+            border-bottom: 1px solid rgba(124, 154, 109, 0.08);
+            font-size: 11px;
+        }
+        
+        .trait-code-file {
+            color: #7c9a6d;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+        }
+        
+        .trait-code-file:hover {
+            text-decoration: underline;
+        }
+        
+        .trait-code-lang {
+            color: #5a5a52;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+        
+        .trait-code {
+            margin: 0;
+            padding: 12px;
+            font-family: 'JetBrains Mono', 'SF Mono', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #d4d4d0;
+            overflow-x: auto;
+        }
+        
+        .trait-coderef {
+            display: inline;
+            padding: 2px 8px;
+            background: rgba(124, 154, 109, 0.1);
+            border: 1px solid rgba(124, 154, 109, 0.15);
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #7c9a6d;
+            cursor: pointer;
+        }
+        
+        .trait-diff {
+            margin: 10px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(22, 22, 20, 0.8);
+            border: 1px solid rgba(124, 154, 109, 0.08);
+        }
+        
+        .trait-diff-header {
+            padding: 8px 12px;
+            background: rgba(26, 26, 24, 0.6);
+            border-bottom: 1px solid rgba(124, 154, 109, 0.08);
+            font-size: 11px;
+            color: #888880;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .trait-diff-line {
+            display: flex;
+            padding: 2px 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+        
+        .trait-diff-added {
+            background: rgba(124, 154, 109, 0.08);
+        }
+        
+        .trait-diff-removed {
+            background: rgba(217, 85, 85, 0.08);
+        }
+        
+        .trait-diff-added .trait-diff-marker {
+            color: #7c9a6d;
+        }
+        
+        .trait-diff-removed .trait-diff-marker {
+            color: #d95555;
+        }
+        
+        .trait-diff-marker {
+            width: 16px;
+            flex-shrink: 0;
+            color: #5a5a52;
+            user-select: none;
+        }
+        
+        .trait-diff-text {
+            color: #d4d4d0;
+        }
+        
+        .trait-file {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 10px;
+            background: rgba(124, 154, 109, 0.08);
+            border: 1px solid rgba(124, 154, 109, 0.12);
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #7c9a6d;
+            cursor: pointer;
+        }
+        
+        .trait-list {
+            margin: 10px 0;
+            padding-left: 24px;
+            color: #d4d4d0;
+        }
+        
+        .trait-item {
+            margin: 4px 0;
+            line-height: 1.5;
+        }
+        
+        .trait-todo {
+            margin: 10px 0;
+            padding: 14px;
+            background: rgba(22, 22, 20, 0.8);
+            border: 1px solid rgba(124, 154, 109, 0.08);
+            border-radius: 8px;
+        }
+        
+        .trait-todo-header {
+            margin-bottom: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #888880;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .trait-todo-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .trait-todo-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 0;
+            font-size: 13px;
+            color: #d4d4d0;
+        }
+        
+        .trait-todo-item input[type="checkbox"] {
+            accent-color: #7c9a6d;
+            width: 14px;
+            height: 14px;
+        }
+        
+        .trait-todo-done {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+        
+        .trait-table {
+            width: 100%;
+            margin: 10px 0;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        .trait-row {
+            border-bottom: 1px solid rgba(124, 154, 109, 0.08);
+        }
+        
+        .trait-row:last-child {
+            border-bottom: none;
+        }
+        
+        .trait-row-header th {
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 500;
+            color: #888880;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(26, 26, 24, 0.4);
+        }
+        
+        .trait-cell {
+            padding: 10px 12px;
+            color: #d4d4d0;
+        }
+        
+        .trait-badge {
+            display: inline-flex;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin: 0 2px;
+        }
+        
+        .trait-badge-default {
+            background: rgba(124, 154, 109, 0.1);
+            color: #888880;
+        }
+        
+        .trait-badge-success {
+            background: rgba(124, 154, 109, 0.15);
+            color: #7c9a6d;
+        }
+        
+        .trait-badge-warning {
+            background: rgba(217, 170, 85, 0.15);
+            color: #d9aa55;
+        }
+        
+        .trait-badge-error {
+            background: rgba(217, 85, 85, 0.15);
+            color: #d95555;
+        }
+        
+        .trait-tag {
+            display: inline-flex;
+            padding: 2px 8px;
+            background: rgba(124, 154, 109, 0.08);
+            border: 1px solid rgba(124, 154, 109, 0.12);
+            border-radius: 4px;
+            font-size: 11px;
+            color: #888880;
+            margin: 0 2px;
+        }
+        
+        .trait-progress {
+            margin: 10px 0;
+        }
+        
+        .trait-progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #888880;
+            margin-bottom: 6px;
+        }
+        
+        .trait-progress-bar {
+            height: 6px;
+            background: rgba(124, 154, 109, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .trait-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #7c9a6d, #8aaa7d);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        
+        .trait-metric {
+            display: inline-flex;
+            flex-direction: column;
+            padding: 14px 18px;
+            background: rgba(22, 22, 20, 0.8);
+            border: 1px solid rgba(124, 154, 109, 0.08);
+            border-radius: 8px;
+            min-width: 90px;
+        }
+        
+        .trait-metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #e8e8e6;
+            line-height: 1;
+        }
+        
+        .trait-metric-label {
+            margin-top: 6px;
+            font-size: 10px;
+            color: #5a5a52;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .trait-metric-change {
+            margin-top: 8px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .trait-metric-change-up {
+            color: #7c9a6d;
+        }
+        
+        .trait-metric-change-down {
+            color: #d95555;
+        }
+        
+        .trait-chart {
+            margin: 10px 0;
+            padding: 14px;
+            background: rgba(22, 22, 20, 0.8);
+            border: 1px solid rgba(124, 154, 109, 0.08);
+            border-radius: 8px;
+        }
+        
+        .trait-chart-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #888880;
+            margin-bottom: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .trait-chart-content {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            height: 100px;
+        }
+        
+        .trait-chart-bar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 24px;
+            background: linear-gradient(180deg, #7c9a6d, #6a8a5d);
+            border-radius: 3px 3px 0 0;
+            transition: all 0.2s;
+        }
+        
+        .trait-chart-bar:hover {
+            filter: brightness(1.1);
+        }
+        
+        .trait-chart-bar-value {
+            margin-top: -18px;
+            font-size: 10px;
+            color: #e8e8e6;
+            font-weight: 500;
+        }
+        
+        .trait-chart-bar-label {
+            margin-top: 6px;
+            font-size: 10px;
+            color: #5a5a52;
+        }
+        
+        .trait-terminal {
+            margin: 10px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid rgba(124, 154, 109, 0.08);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+        
+        .trait-terminal-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(26, 26, 24, 0.6);
+            border-bottom: 1px solid rgba(124, 154, 109, 0.08);
+        }
+        
+        .trait-terminal-title {
+            font-size: 11px;
+            color: #5a5a52;
+        }
+        
+        .trait-terminal-content {
+            padding: 12px;
+            line-height: 1.6;
+        }
+        
+        .trait-command {
+            color: #7c9a6d;
+        }
+        
+        .trait-command::before {
+            content: '$ ';
+            color: #5a5a52;
+        }
+        
+        .trait-output {
+            color: #d4d4d0;
+        }
+        
+        .trait-output-stderr {
+            color: #d9aa55;
+        }
+        
+        .trait-output-error {
+            color: #d95555;
+        }
+        
+        .trait-output-success {
+            color: #7c9a6d;
+        }
+        
+        .trait-alert {
+            display: flex;
+            gap: 10px;
+            padding: 12px 14px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            border-left: 3px solid;
+        }
+        
+        .trait-alert-icon {
+            flex-shrink: 0;
+            font-size: 16px;
+        }
+        
+        .trait-alert-info {
+            background: rgba(107, 140, 174, 0.08);
+            border-left-color: #6b8cae;
+            color: #8aaec9;
+        }
+        
+        .trait-alert-warning {
+            background: rgba(217, 170, 85, 0.08);
+            border-left-color: #d9aa55;
+            color: #e4c078;
+        }
+        
+        .trait-alert-error {
+            background: rgba(217, 85, 85, 0.08);
+            border-left-color: #d95555;
+            color: #e08585;
+        }
+        
+        .trait-alert-success {
+            background: rgba(124, 154, 109, 0.1);
+            border-left-color: #7c9a6d;
+            color: #a8c49a;
+        }
+        
+        .trait-alert-tip {
+            background: rgba(125, 174, 163, 0.08);
+            border-left-color: #7daea3;
+            color: #9ac9c0;
+        }
+        
+        .trait-card {
+            margin: 10px 0;
+            background: rgba(22, 22, 20, 0.8);
+            border: 1px solid rgba(124, 154, 109, 0.08);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .trait-card-title {
+            padding: 12px 14px;
+            background: rgba(26, 26, 24, 0.6);
+            border-bottom: 1px solid rgba(124, 154, 109, 0.08);
+            font-size: 13px;
+            font-weight: 600;
+            color: #e8e8e6;
+        }
+        
+        .trait-card-content {
+            padding: 14px;
+        }
+        
+        .trait-grid {
+            display: grid;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .trait-grid-item {
+            min-width: 0;
+        }
+        
+        .trait-divider {
+            margin: 14px 0;
+            border: none;
+            border-top: 1px solid rgba(124, 154, 109, 0.08);
+        }
+        
+        .trait-filetree {
+            margin: 10px 0;
+            padding: 14px;
+            background: rgba(22, 22, 20, 0.8);
+            border: 1px solid rgba(124, 154, 109, 0.08);
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+        
+        .trait-filetree-header {
+            margin-bottom: 10px;
+            font-size: 11px;
+            color: #5a5a52;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .trait-folder {
+            margin: 3px 0;
+        }
+        
+        .trait-folder-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #d4d4d0;
+        }
+        
+        .trait-folder-header:hover {
+            background: rgba(124, 154, 109, 0.08);
+        }
+        
+        .trait-folder-children {
+            padding-left: 18px;
+        }
+        
+        .trait-search {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: rgba(22, 22, 20, 0.8);
+            border: 1px solid rgba(124, 154, 109, 0.08);
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        
+        .trait-search-query {
+            font-family: 'JetBrains Mono', monospace;
+            color: #e8e8e6;
+            font-weight: 500;
+        }
+        
+        .trait-search-results {
+            margin-left: auto;
+            font-size: 12px;
+            color: #5a5a52;
+        }
+        
+        .trait-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(22, 22, 20, 0.8);
+            border: 1px solid rgba(124, 154, 109, 0.08);
+            border-radius: 6px;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+        
+        .trait-breadcrumb-separator {
+            color: #3a3a38;
+            font-weight: 300;
+        }
+        
+        .trait-timestamp {
+            font-size: 12px;
+            color: #5a5a52;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .trait-link {
+            color: #7c9a6d;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        
+        .trait-link:hover {
+            color: #8aaa7d;
+        }
+        
+        .trait-text-content {
+            color: #d4d4d0;
+            line-height: 1.6;
+        }
+        
+        .trait-text-content p {
+            margin: 0 0 10px 0;
+        }
+        
+        .trait-text-content p:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>AML Widget Scenarios</h1>
+    <div class="subtitle">30 comprehensive test cases for IDE widgets</div>
+    
+    <div class="scenarios-grid">
+        
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Welcome</span>
+                <span class="scenario-number">#1</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-alert trait-alert-success"><span class="trait-alert-icon">✓</span><span>Welcome to Traitor IDE!</span></div><div class="trait-text-content"><p>I&#x27;m your AI coding assistant. I can help you:</p></div><div class="trait-grid" style="grid-template-columns: repeat(2, 1fr);"><div class="trait-card"><div class="trait-card-title">Explore</div><div class="trait-card-content"><ul class="trait-list"><li class="trait-item">Navigate codebase</li><li class="trait-item">Find definitions</li><li class="trait-item">Search patterns</li></ul></div></div><div class="trait-card"><div class="trait-card-title">Edit</div><div class="trait-card-content"><ul class="trait-list"><li class="trait-item">Refactor code</li><li class="trait-item">Fix bugs</li><li class="trait-item">Add features</li></ul></div></div></div><span class="trait-button">Get Started</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Code Review</span>
+                <span class="scenario-number">#2</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-text-content"><p>Reviewed</p></div><span class="trait-file">/auth.ts</span><div class="trait-text-content"><p>- Found 3 issues:</p></div><div class="trait-alert trait-alert-warning"><span class="trait-alert-icon">⚠</span><span>Line 42: Missing input validation</span></div><div class="trait-code-block"><div class="trait-code-header"><span class="trait-code-file">/src/auth.ts</span><span class="trait-code-lang">typescript</span></div><pre class="trait-code">
+function login(user: string) {
+  // TODO: Add validation
+  return db.find(user);
+}
+</pre></div><div class="trait-diff"><div class="trait-diff-header">/src/auth.ts</div><div class="trait-diff-content"><div class="trait-diff-line"><span class="trait-diff-marker"> </span><span class="trait-diff-text">function login(user: string) {</span></div><div class="trait-diff-line trait-diff-removed"><span class="trait-diff-marker">-</span><span class="trait-diff-text">   // TODO: Add validation</span></div><div class="trait-diff-line trait-diff-added"><span class="trait-diff-marker">+</span><span class="trait-diff-text">   if (!user || user.length &lt; 3) {</span></div><div class="trait-diff-line trait-diff-added"><span class="trait-diff-marker">+</span><span class="trait-diff-text">     throw new Error(&#x27;Invalid username&#x27;);</span></div><div class="trait-diff-line trait-diff-added"><span class="trait-diff-marker">+</span><span class="trait-diff-text">   }</span></div><div class="trait-diff-line"><span class="trait-diff-marker"> </span><span class="trait-diff-text">    return db.find(user);</span></div><div class="trait-diff-line"><span class="trait-diff-marker"> </span><span class="trait-diff-text">  }</span></div></div></div><span class="trait-button">Open auth.ts</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Build Status</span>
+                <span class="scenario-number">#3</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-grid" style="grid-template-columns: repeat(4, 1fr);"><div class="trait-metric"><div class="trait-metric-value">45</div><div class="trait-metric-label">Tests</div><div class="trait-metric-change trait-metric-change-up">+3</div></div><div class="trait-metric"><div class="trait-metric-value">100%</div><div class="trait-metric-label">Passing</div></div><div class="trait-metric"><div class="trait-metric-value">2.4s</div><div class="trait-metric-label">Build Time</div><div class="trait-metric-change trait-metric-change-down">-0.3s</div></div><div class="trait-metric"><div class="trait-metric-value">0</div><div class="trait-metric-label">Errors</div></div></div><div class="trait-terminal"><div class="trait-terminal-header"><span class="trait-terminal-title">Build Output</span></div><div class="trait-terminal-content"><div class="trait-command">npm run build</div><div class="trait-output trait-output-stdout">Building 247 files...</div><div class="trait-output trait-output-stdout">Optimizing chunks...</div><div class="trait-output trait-output-success">Build completed in 2.4s</div></div></div><div class="trait-progress"><div class="trait-progress-label"><span>Build Progress</span><span>100/100</span></div><div class="trait-progress-bar"><div class="trait-progress-fill" style="width: 100%"></div></div></div>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Git Status</span>
+                <span class="scenario-number">#4</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-breadcrumb"><span class="trait-tag">main</span><span class="trait-breadcrumb-separator">/</span><span class="trait-tag">feature</span><span class="trait-breadcrumb-separator">/</span><span class="trait-tag">auth-redesign</span></div><div class="trait-filetree"><div class="trait-filetree-header">Changes</div><div class="trait-folder"><div class="trait-folder-header">▼ Modified</div><div class="trait-folder-children"><span class="trait-file">/auth.ts</span><span class="trait-file">/login.tsx</span></div></div><div class="trait-folder"><div class="trait-folder-header">▼ Staged</div><div class="trait-folder-children"><span class="trait-file">/package.json</span></div></div></div><div class="trait-terminal"><div class="trait-terminal-header"><span class="trait-terminal-title">Git Diff</span></div><div class="trait-terminal-content"><div class="trait-command">git diff --stat</div><div class="trait-output trait-output-stdout">src/auth.ts   | 45 +++++++++</div><div class="trait-output trait-output-stdout">src/login.tsx | 12 +++++</div></div></div>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Error Debug</span>
+                <span class="scenario-number">#5</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-alert trait-alert-error"><span class="trait-alert-icon">✕</span><span>Runtime Error: Cannot read property &#x27;map&#x27; of undefined</span></div><div class="trait-text-content"><p>Stack trace:</p></div><div class="trait-code-block"><div class="trait-code-header"><span class="trait-code-file">/src/components/List.tsx</span><span class="trait-code-lang">typescript</span></div><pre class="trait-code">
+const List = ({ items }) =&gt; {
+  return items.map(item =&gt; &lt;Item key={item.id} /&gt;);
+};
+</pre></div><div class="trait-alert trait-alert-tip"><span class="trait-alert-icon">💡</span><span>Fix: Add null check before mapping</span></div><div class="trait-diff"><div class="trait-diff-header">/src/components/List.tsx</div><div class="trait-diff-content"><div class="trait-diff-line"><span class="trait-diff-marker"> </span><span class="trait-diff-text">const List = ({ items }) =&gt; {</span></div><div class="trait-diff-line trait-diff-added"><span class="trait-diff-marker">+</span><span class="trait-diff-text">   if (!items) return null;</span></div><div class="trait-diff-line"><span class="trait-diff-marker"> </span><span class="trait-diff-text">    return items.map(item =&gt; &lt;Item key={item.id} /&gt;);</span></div><div class="trait-diff-line"><span class="trait-diff-marker"> </span><span class="trait-diff-text">  };</span></div></div></div>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Performance</span>
+                <span class="scenario-number">#6</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-chart"><div class="trait-chart-title">Bundle Size Over Time</div><div class="trait-chart-content"><div class="trait-chart-bar" style="height: 76.29757785467127%"><div class="trait-chart-bar-value">245</div><div class="trait-chart-bar-label">Mon</div></div><div class="trait-chart-bar" style="height: 83.14878892733564%"><div class="trait-chart-bar-value">267</div><div class="trait-chart-bar-label">Tue</div></div><div class="trait-chart-bar" style="height: 90.0%"><div class="trait-chart-bar-value">289</div><div class="trait-chart-bar-label">Wed</div></div><div class="trait-chart-bar" style="height: 79.72318339100346%"><div class="trait-chart-bar-value">256</div><div class="trait-chart-bar-label">Thu</div></div><div class="trait-chart-bar" style="height: 72.8719723183391%"><div class="trait-chart-bar-value">234</div><div class="trait-chart-bar-label">Fri</div></div></div></div><div class="trait-grid" style="grid-template-columns: repeat(3, 1fr);"><div class="trait-card"><div class="trait-card-title">Largest Files</div><div class="trait-card-content"><ul class="trait-list"><li class="trait-item">vendor.js (1.2MB)</li><li class="trait-item">app.js (450KB)</li><li class="trait-item">styles.css (89KB)</li></ul></div></div><div class="trait-card"><div class="trait-card-title">Suggestions</div><div class="trait-card-content"><ul class="trait-list"><li class="trait-item">Code split routes</li><li class="trait-item">Lazy load images</li><li class="trait-item">Tree shake lodash</li></ul></div></div><div class="trait-card"><div class="trait-card-title">Savings</div><div class="trait-card-content"><ul class="trait-list"><li class="trait-item">-450KB vendor</li><li class="trait-item">-120KB images</li><li class="trait-item">-89KB fonts</li></ul></div></div></div>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Search Results</span>
+                <span class="scenario-number">#7</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-search">🔍 <span class="trait-search-query">useEffect dependency</span><span class="trait-search-results">12 results</span></div><table class="trait-table"><tbody><tr class="trait-row trait-row-header"><th class="trait-cell">File</th><th class="trait-cell">Line</th><th class="trait-cell">Match</th></tr><tr class="trait-row"><td class="trait-cell">&lt;trait:file path=&quot;/src/App.tsx&quot; name=&quot;App.tsx&quot; /&gt;</td><td class="trait-cell">42</td><td class="trait-cell">useEffect(() =&amp;gt; {...}, [])</td></tr><tr class="trait-row"><td class="trait-cell">&lt;trait:file path=&quot;/src/hooks.ts&quot; name=&quot;hooks.ts&quot; /&gt;</td><td class="trait-cell">15</td><td class="trait-cell">useEffect(fn, deps)</td></tr><tr class="trait-row"><td class="trait-cell">&lt;trait:file path=&quot;/src/utils.ts&quot; name=&quot;utils.ts&quot; /&gt;</td><td class="trait-cell">89</td><td class="trait-cell">useEffect(() =&amp;gt; {...})</td></tr></tbody></table><span class="trait-button">Open First Match</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">API Guide</span>
+                <span class="scenario-number">#8</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-alert trait-alert-info"><span class="trait-alert-icon">ℹ</span><span>Setting up API integration</span></div><div class="trait-text-content"><p>Follow these steps:</p></div><div class="trait-todo"><div class="trait-todo-header">Setup Steps</div><ul class="trait-todo-list"><li class="trait-todo-item trait-todo-done"><input type="checkbox" checked disabled> <span>Install dependencies</span></li><li class="trait-todo-item trait-todo-done"><input type="checkbox" checked disabled> <span>Create API client</span></li><li class="trait-todo-item "><input type="checkbox"  disabled> <span>Add error handling</span></li><li class="trait-todo-item "><input type="checkbox"  disabled> <span>Write tests</span></li><li class="trait-todo-item "><input type="checkbox"  disabled> <span>Add caching</span></li></ul></div><div class="trait-code-block"><div class="trait-code-header"><span class="trait-code-file">/src/api.ts</span><span class="trait-code-lang">typescript</span></div><pre class="trait-code">
+import axios from &#x27;axios&#x27;;
+
+export const api = axios.create({
+  baseURL: &#x27;/api/v1&#x27;,
+  timeout: 5000
+});
+</pre></div><span class="trait-button">Run Tests</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Refactoring</span>
+                <span class="scenario-number">#9</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-card"><div class="trait-card-title">Refactoring Plan</div><div class="trait-card-content"><ol class="trait-list"><li class="trait-item">Extract shared utilities</li><li class="trait-item">Convert to TypeScript</li><li class="trait-item">Add unit tests</li><li class="trait-item">Update documentation</li></ol></div></div><div class="trait-grid" style="grid-template-columns: repeat(2, 1fr);"><div class="trait-metric"><div class="trait-metric-value">12</div><div class="trait-metric-label">Files to refactor</div></div><div class="trait-metric"><div class="trait-metric-value">~4h</div><div class="trait-metric-label">Estimated time</div></div></div><div class="trait-diff"><div class="trait-diff-header">/src/utils/helpers.ts</div><div class="trait-diff-content"><div class="trait-diff-line trait-diff-added"><span class="trait-diff-marker">+</span><span class="trait-diff-text"> export const formatDate = (date: Date): string =&gt; {</span></div><div class="trait-diff-line trait-diff-added"><span class="trait-diff-marker">+</span><span class="trait-diff-text">   return date.toISOString().split(&#x27;T&#x27;)[0];</span></div><div class="trait-diff-line trait-diff-added"><span class="trait-diff-marker">+</span><span class="trait-diff-text"> };</span></div></div></div><div class="trait-progress"><div class="trait-progress-label"><span>Refactoring Progress</span><span>25/100</span></div><div class="trait-progress-bar"><div class="trait-progress-fill" style="width: 25.0%"></div></div></div>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Test Results</span>
+                <span class="scenario-number">#10</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-grid" style="grid-template-columns: repeat(4, 1fr);"><div class="trait-metric"><div class="trait-metric-value">156</div><div class="trait-metric-label">Total</div></div><div class="trait-metric"><div class="trait-metric-value">152</div><div class="trait-metric-label">Passed</div></div><div class="trait-metric"><div class="trait-metric-value">3</div><div class="trait-metric-label">Failed</div></div><div class="trait-metric"><div class="trait-metric-value">1</div><div class="trait-metric-label">Skipped</div></div></div><div class="trait-terminal"><div class="trait-terminal-header"><span class="trait-terminal-title">Test Output</span></div><div class="trait-terminal-content"><div class="trait-command">npm test</div><div class="trait-output trait-output-stdout">PASS src/auth.test.ts</div><div class="trait-output trait-output-stdout">PASS src/utils.test.ts</div><div class="trait-output trait-output-stderr">FAIL src/api.test.ts</div><div class="trait-output trait-output-error">Expected 200, got 404</div><div class="trait-output trait-output-success">Test Suites: 2 passed, 1 failed</div></div></div><span class="trait-badge trait-badge-warning">3 Tests Failing</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Navigation</span>
+                <span class="scenario-number">#11</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-breadcrumb"><span class="trait-tag">src</span><span class="trait-breadcrumb-separator">/</span><span class="trait-tag">components</span><span class="trait-breadcrumb-separator">/</span><span class="trait-tag">forms</span><span class="trait-breadcrumb-separator">/</span><span class="trait-tag">LoginForm.tsx</span></div><div class="trait-filetree"><div class="trait-filetree-header">Related Files</div><div class="trait-folder"><div class="trait-folder-header">▼ Components</div><div class="trait-folder-children"><span class="trait-file">/Form.tsx</span><span class="trait-file">/Input.tsx</span></div></div><div class="trait-folder"><div class="trait-folder-header">▼ Hooks</div><div class="trait-folder-children"><span class="trait-file">/useForm.ts</span><span class="trait-file">/useAuth.ts</span></div></div></div><span class="trait-button">Search Forms</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Dependencies</span>
+                <span class="scenario-number">#12</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-card"><div class="trait-card-title">Outdated Dependencies</div><div class="trait-card-content"><table class="trait-table"><tbody><tr class="trait-row trait-row-header"><th class="trait-cell">Package</th><th class="trait-cell">Current</th><th class="trait-cell">Latest</th><th class="trait-cell">Status</th></tr><tr class="trait-row"><td class="trait-cell">react</td><td class="trait-cell">18.0.0</td><td class="trait-cell">18.2.0</td><td class="trait-cell">&lt;trait:badge variant=&quot;success&quot;&gt;Minor&lt;/trait:badge&gt;</td></tr><tr class="trait-row"><td class="trait-cell">typescript</td><td class="trait-cell">4.8.0</td><td class="trait-cell">5.0.0</td><td class="trait-cell">&lt;trait:badge variant=&quot;warning&quot;&gt;Major&lt;/trait:badge&gt;</td></tr></tbody></table></div></div><span class="trait-button">Update All</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Documentation</span>
+                <span class="scenario-number">#13</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-alert trait-alert-tip"><span class="trait-alert-icon">💡</span><span>Documentation generated successfully</span></div><div class="trait-grid" style="grid-template-columns: repeat(2, 1fr);"><div class="trait-card"><div class="trait-card-title">API Docs</div><div class="trait-card-content"><ul class="trait-list"><li class="trait-item">&lt;trait:link href=&quot;/docs/api&quot;&gt;REST API&lt;/trait:link&gt;</li><li class="trait-item">&lt;trait:link href=&quot;/docs/graphql&quot;&gt;GraphQL&lt;/trait:link&gt;</li><li class="trait-item">&lt;trait:link href=&quot;/docs/webhooks&quot;&gt;Webhooks&lt;/trait:link&gt;</li></ul></div></div><div class="trait-card"><div class="trait-card-title">Guides</div><div class="trait-card-content"><ul class="trait-list"><li class="trait-item">&lt;trait:link href=&quot;/docs/setup&quot;&gt;Getting Started&lt;/trait:link&gt;</li><li class="trait-item">&lt;trait:link href=&quot;/docs/auth&quot;&gt;Authentication&lt;/trait:link&gt;</li><li class="trait-item">&lt;trait:link href=&quot;/docs/deploy&quot;&gt;Deployment&lt;/trait:link&gt;</li></ul></div></div></div><div class="trait-progress"><div class="trait-progress-label"><span>Documentation Coverage</span><span>85/100</span></div><div class="trait-progress-bar"><div class="trait-progress-fill" style="width: 85.0%"></div></div></div>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Security</span>
+                <span class="scenario-number">#14</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-alert trait-alert-warning"><span class="trait-alert-icon">⚠</span><span>2 vulnerabilities found</span></div><div class="trait-terminal"><div class="trait-terminal-header"><span class="trait-terminal-title">Security Report</span></div><div class="trait-terminal-content"><div class="trait-command">npm audit</div><div class="trait-output trait-output-stdout">found 0 vulnerabilities</div><div class="trait-output trait-output-stderr">Critical: lodash prototype pollution</div><div class="trait-output trait-output-stderr">High: axios XSS vulnerability</div></div></div><div class="trait-card"><div class="trait-card-title">Recommendations</div><div class="trait-card-content"><ol class="trait-list"><li class="trait-item">Update lodash to 4.17.21+</li><li class="trait-item">Update axios to 1.6.0+</li><li class="trait-item">Enable Dependabot alerts</li></ol></div></div>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Database</span>
+                <span class="scenario-number">#15</span>
+            </div>
+            <div class="scenario-content">
+                <span class="trait-file">/schema.prisma</span><div class="trait-code-block"><div class="trait-code-header"><span class="trait-code-file">/prisma/schema.prisma</span><span class="trait-code-lang">prisma</span></div><pre class="trait-code">
+model User {
+  id    Int     @id @default(autoincrement())
+  email String  @unique
+  name  String?
+  posts Post[]
+}
+
+model Post {
+  id       Int    @id @default(autoincrement())
+  title    String
+  content  String
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId Int
+}
+</pre></div><span class="trait-button">Run Migration</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">TS Migration</span>
+                <span class="scenario-number">#16</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-grid" style="grid-template-columns: repeat(3, 1fr);"><div class="trait-metric"><div class="trait-metric-value">45</div><div class="trait-metric-label">Files</div></div><div class="trait-metric"><div class="trait-metric-value">28</div><div class="trait-metric-label">Converted</div></div><div class="trait-metric"><div class="trait-metric-value">62%</div><div class="trait-metric-label">Progress</div></div></div><div class="trait-todo"><div class="trait-todo-header">Migration Tasks</div><ul class="trait-todo-list"><li class="trait-todo-item trait-todo-done"><input type="checkbox" checked disabled> <span>Setup tsconfig.json</span></li><li class="trait-todo-item trait-todo-done"><input type="checkbox" checked disabled> <span>Convert utilities</span></li><li class="trait-todo-item "><input type="checkbox"  disabled> <span>Convert components</span></li><li class="trait-todo-item "><input type="checkbox"  disabled> <span>Add strict mode</span></li></ul></div><div class="trait-diff"><div class="trait-diff-header">/src/utils.js</div><div class="trait-diff-content"><div class="trait-diff-line trait-diff-removed"><span class="trait-diff-marker">-</span><span class="trait-diff-text"> function add(a, b) {</span></div><div class="trait-diff-line trait-diff-added"><span class="trait-diff-marker">+</span><span class="trait-diff-text"> function add(a: number, b: number): number {</span></div><div class="trait-diff-line"><span class="trait-diff-marker"> </span><span class="trait-diff-text">    return a + b;</span></div><div class="trait-diff-line"><span class="trait-diff-marker"> </span><span class="trait-diff-text">  }</span></div></div></div>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Components</span>
+                <span class="scenario-number">#17</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-grid" style="grid-template-columns: repeat(3, 1fr);"><div class="trait-card"><div class="trait-card-title">Buttons</div><div class="trait-card-content"><ul class="trait-list"><li class="trait-item">Primary</li><li class="trait-item">Secondary</li><li class="trait-item">Ghost</li></ul></div></div><div class="trait-card"><div class="trait-card-title">Inputs</div><div class="trait-card-content"><ul class="trait-list"><li class="trait-item">Text</li><li class="trait-item">Number</li><li class="trait-item">Select</li></ul></div></div><div class="trait-card"><div class="trait-card-title">Feedback</div><div class="trait-card-content"><ul class="trait-list"><li class="trait-item">Alert</li><li class="trait-item">Toast</li><li class="trait-item">Modal</li></ul></div></div></div><span class="trait-button">View All</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Error Boundary</span>
+                <span class="scenario-number">#18</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-alert trait-alert-error"><span class="trait-alert-icon">✕</span><span>Component Error: Something went wrong</span></div><div class="trait-code-block"><div class="trait-code-header"><span class="trait-code-file">/src/ErrorBoundary.tsx</span><span class="trait-code-lang">typescript</span></div><pre class="trait-code">
+class ErrorBoundary extends React.Component {
+  componentDidCatch(error, info) {
+    logError(error, info);
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return &lt;Fallback /&gt;;
+    }
+    return this.props.children;
+  }
+}
+</pre></div><div class="trait-alert trait-alert-tip"><span class="trait-alert-icon">💡</span><span>Wrap problematic components with ErrorBoundary</span></div><span class="trait-button">Open File</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Environment</span>
+                <span class="scenario-number">#19</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-filetree"><div class="trait-filetree-header">Config Files</div><span class="trait-file">/.env.local</span><span class="trait-file">/.env.production</span><span class="trait-file">/app.ts</span></div><div class="trait-code-block"><div class="trait-code-header"><span class="trait-code-file">/.env.local</span></div><pre class="trait-code">
+DATABASE_URL=postgresql://localhost:5432/dev
+API_KEY=sk_test_123
+DEBUG=true
+</pre></div><div class="trait-alert trait-alert-warning"><span class="trait-alert-icon">⚠</span><span>Never commit .env files to git</span></div>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Deployment</span>
+                <span class="scenario-number">#20</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-grid" style="grid-template-columns: repeat(3, 1fr);"><div class="trait-metric"><div class="trait-metric-value">v2.1.0</div><div class="trait-metric-label">Version</div></div><div class="trait-metric"><div class="trait-metric-value">prod</div><div class="trait-metric-label">Environment</div></div><div class="trait-metric"><div class="trait-metric-value">Healthy</div><div class="trait-metric-label">Status</div></div></div><div class="trait-terminal"><div class="trait-terminal-header"><span class="trait-terminal-title">Deploy Log</span></div><div class="trait-terminal-content"><div class="trait-command">git push origin main</div><div class="trait-output trait-output-stdout">Building...</div><div class="trait-output trait-output-stdout">Uploading...</div><div class="trait-output trait-output-success">Deployed to production</div></div></div><span class="trait-button">Deploy</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Code Metrics</span>
+                <span class="scenario-number">#21</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-chart"><div class="trait-chart-title">Lines of Code</div><div class="trait-chart-content"><div class="trait-chart-bar" style="height: 74.4%"><div class="trait-chart-bar-value">1240</div><div class="trait-chart-bar-label">Mon</div></div><div class="trait-chart-bar" style="height: 81.0%"><div class="trait-chart-bar-value">1350</div><div class="trait-chart-bar-label">Tue</div></div><div class="trait-chart-bar" style="height: 76.80000000000001%"><div class="trait-chart-bar-value">1280</div><div class="trait-chart-bar-label">Wed</div></div><div class="trait-chart-bar" style="height: 85.2%"><div class="trait-chart-bar-value">1420</div><div class="trait-chart-bar-label">Thu</div></div><div class="trait-chart-bar" style="height: 90.0%"><div class="trait-chart-bar-value">1500</div><div class="trait-chart-bar-label">Fri</div></div></div></div><div class="trait-grid" style="grid-template-columns: repeat(4, 1fr);"><div class="trait-metric"><div class="trait-metric-value">1.2k</div><div class="trait-metric-label">TypeScript</div></div><div class="trait-metric"><div class="trait-metric-value">450</div><div class="trait-metric-label">CSS</div></div><div class="trait-metric"><div class="trait-metric-value">89</div><div class="trait-metric-label">Tests</div></div><div class="trait-metric"><div class="trait-metric-value">12</div><div class="trait-metric-label">Config</div></div></div>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Pull Request</span>
+                <span class="scenario-number">#22</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-card"><div class="trait-card-title">PR #42: Auth Redesign</div><div class="trait-card-content"><ul class="trait-list"><li class="trait-item">Add JWT authentication</li><li class="trait-item">Implement refresh tokens</li><li class="trait-item">Add password reset flow</li></ul></div></div><table class="trait-table"><tbody><tr class="trait-row trait-row-header"><th class="trait-cell">Check</th><th class="trait-cell">Status</th></tr><tr class="trait-row"><td class="trait-cell">Tests passing</td><td class="trait-cell">&lt;trait:badge variant=&quot;success&quot;&gt;Yes&lt;/trait:badge&gt;</td></tr><tr class="trait-row"><td class="trait-cell">Code reviewed</td><td class="trait-cell">&lt;trait:badge variant=&quot;success&quot;&gt;Yes&lt;/trait:badge&gt;</td></tr><tr class="trait-row"><td class="trait-cell">Docs updated</td><td class="trait-cell">&lt;trait:badge variant=&quot;warning&quot;&gt;Pending&lt;/trait:badge&gt;</td></tr></tbody></table>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Debug</span>
+                <span class="scenario-number">#23</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-alert trait-alert-tip"><span class="trait-alert-icon">💡</span><span>Set breakpoint at line 42</span></div><div class="trait-code-block"><div class="trait-code-header"><span class="trait-code-file">/src/debug.ts</span><span class="trait-code-lang">typescript</span></div><pre class="trait-code">
+function processData(data) {
+  debugger; // Break here
+  return transform(data);
+}
+</pre></div><div class="trait-terminal"><div class="trait-terminal-header"><span class="trait-terminal-title">Debug Console</span></div><div class="trait-terminal-content"><div class="trait-output trait-output-stdout">data = Array(10) [1, 2, 3...]</div><div class="trait-output trait-output-stdout">result = Object {name: &quot;test&quot;}</div></div></div><span class="trait-button">Start Debugger</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Optimization</span>
+                <span class="scenario-number">#24</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-card"><div class="trait-card-title">Performance Improvements</div><div class="trait-card-content"><ol class="trait-list"><li class="trait-item">Code split routes (-450KB)</li><li class="trait-item">Lazy load images (-120KB)</li><li class="trait-item">Tree shake lodash (-89KB)</li><li class="trait-item">Compress assets (-234KB)</li></ol></div></div><div class="trait-metric"><div class="trait-metric-value">893KB</div><div class="trait-metric-label">Before</div></div><div class="trait-metric"><div class="trait-metric-value">0KB</div><div class="trait-metric-label">Saved</div><div class="trait-metric-change trait-metric-change-down">-893KB</div></div><div class="trait-alert trait-alert-success"><span class="trait-alert-icon">✓</span><span>Total savings: 893KB (42%)</span></div>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Feature Flags</span>
+                <span class="scenario-number">#25</span>
+            </div>
+            <div class="scenario-content">
+                <table class="trait-table"><tbody><tr class="trait-row trait-row-header"><th class="trait-cell">Feature</th><th class="trait-cell">Status</th><th class="trait-cell">Users</th></tr><tr class="trait-row"><td class="trait-cell">New Dashboard</td><td class="trait-cell">&lt;trait:badge variant=&quot;success&quot;&gt;Enabled&lt;/trait:badge&gt;</td><td class="trait-cell">100%</td></tr><tr class="trait-row"><td class="trait-cell">Dark Mode</td><td class="trait-cell">&lt;trait:badge variant=&quot;success&quot;&gt;Enabled&lt;/trait:badge&gt;</td><td class="trait-cell">100%</td></tr><tr class="trait-row"><td class="trait-cell">Beta API</td><td class="trait-cell">&lt;trait:badge variant=&quot;warning&quot;&gt;Partial&lt;/trait:badge&gt;</td><td class="trait-cell">25%</td></tr></tbody></table><span class="trait-button">Edit Config</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Analytics</span>
+                <span class="scenario-number">#26</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-chart"><div class="trait-chart-title">Daily Active Users</div><div class="trait-chart-content"><div class="trait-chart-bar" style="height: 59.047619047619044%"><div class="trait-chart-bar-value">1240</div><div class="trait-chart-bar-label">Mon</div></div><div class="trait-chart-bar" style="height: 64.28571428571429%"><div class="trait-chart-bar-value">1350</div><div class="trait-chart-bar-label">Tue</div></div><div class="trait-chart-bar" style="height: 90.0%"><div class="trait-chart-bar-value">1890</div><div class="trait-chart-bar-label">Wed</div></div><div class="trait-chart-bar" style="height: 67.61904761904762%"><div class="trait-chart-bar-value">1420</div><div class="trait-chart-bar-label">Thu</div></div><div class="trait-chart-bar" style="height: 78.57142857142857%"><div class="trait-chart-bar-value">1650</div><div class="trait-chart-bar-label">Fri</div></div></div></div><div class="trait-grid" style="grid-template-columns: repeat(3, 1fr);"><div class="trait-metric"><div class="trait-metric-value">1.5k</div><div class="trait-metric-label">DAU</div><div class="trait-metric-change trait-metric-change-up">+12%</div></div><div class="trait-metric"><div class="trait-metric-value">3.2</div><div class="trait-metric-label">Pages/Session</div></div><div class="trait-metric"><div class="trait-metric-value">45s</div><div class="trait-metric-label">Avg Duration</div></div></div>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Hotfix</span>
+                <span class="scenario-number">#27</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-alert trait-alert-error"><span class="trait-alert-icon">✕</span><span>Critical: Production error affecting payments</span></div><div class="trait-todo"><div class="trait-todo-header">Hotfix Checklist</div><ul class="trait-todo-list"><li class="trait-todo-item trait-todo-done"><input type="checkbox" checked disabled> <span>Identify issue</span></li><li class="trait-todo-item trait-todo-done"><input type="checkbox" checked disabled> <span>Create fix</span></li><li class="trait-todo-item trait-todo-done"><input type="checkbox" checked disabled> <span>Test locally</span></li><li class="trait-todo-item "><input type="checkbox"  disabled> <span>Deploy to staging</span></li><li class="trait-todo-item "><input type="checkbox"  disabled> <span>Deploy to prod</span></li></ul></div><div class="trait-diff"><div class="trait-diff-header">/src/payment.ts</div><div class="trait-diff-content"><div class="trait-diff-line trait-diff-removed"><span class="trait-diff-marker">-</span><span class="trait-diff-text"> if (amount &gt; 0) {</span></div><div class="trait-diff-line trait-diff-added"><span class="trait-diff-marker">+</span><span class="trait-diff-text"> if (amount != null &amp;&amp; amount &gt; 0) {</span></div><div class="trait-diff-line"><span class="trait-diff-marker"> </span><span class="trait-diff-text">    processPayment(amount);</span></div><div class="trait-diff-line"><span class="trait-diff-marker"> </span><span class="trait-diff-text">  }</span></div></div></div><span class="trait-button">Deploy Hotfix</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Onboarding</span>
+                <span class="scenario-number">#28</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-alert trait-alert-success"><span class="trait-alert-icon">✓</span><span>Welcome to the team!</span></div><div class="trait-todo"><div class="trait-todo-header">First Week</div><ul class="trait-todo-list"><li class="trait-todo-item trait-todo-done"><input type="checkbox" checked disabled> <span>Setup dev environment</span></li><li class="trait-todo-item trait-todo-done"><input type="checkbox" checked disabled> <span>Clone repositories</span></li><li class="trait-todo-item "><input type="checkbox"  disabled> <span>Read architecture docs</span></li><li class="trait-todo-item "><input type="checkbox"  disabled> <span>First code review</span></li><li class="trait-todo-item "><input type="checkbox"  disabled> <span>Deploy to staging</span></li></ul></div><div class="trait-card"><div class="trait-card-title">Resources</div><div class="trait-card-content"><ul class="trait-list"><li class="trait-item">&lt;trait:file path=&quot;/docs/setup.md&quot; name=&quot;Setup Guide&quot; /&gt;</li><li class="trait-item">&lt;trait:file path=&quot;/docs/architecture.md&quot; name=&quot;Architecture&quot; /&gt;</li><li class="trait-item">&lt;trait:file path=&quot;/CONTRIBUTING.md&quot; name=&quot;Contributing&quot; /&gt;</li></ul></div></div>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">Review Summary</span>
+                <span class="scenario-number">#29</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-grid" style="grid-template-columns: repeat(3, 1fr);"><div class="trait-metric"><div class="trait-metric-value">12</div><div class="trait-metric-label">Files</div></div><div class="trait-metric"><div class="trait-metric-value">+450</div><div class="trait-metric-label">Additions</div></div><div class="trait-metric"><div class="trait-metric-value">-120</div><div class="trait-metric-label">Deletions</div></div></div><div class="trait-card"><div class="trait-card-title">Feedback</div><div class="trait-card-content"><ul class="trait-list"><li class="trait-item">Nice use of TypeScript generics</li><li class="trait-item">Consider adding more tests</li><li class="trait-item">Documentation looks good</li></ul></div></div><span class="trait-badge trait-badge-success">Approved</span><span class="trait-button">Merge PR</span>
+            </div>
+        </div>
+        
+
+        <div class="scenario">
+            <div class="scenario-header">
+                <span class="scenario-name">System Status</span>
+                <span class="scenario-number">#30</span>
+            </div>
+            <div class="scenario-content">
+                <div class="trait-grid" style="grid-template-columns: repeat(4, 1fr);"><div class="trait-metric"><div class="trait-metric-value">99.9%</div><div class="trait-metric-label">Uptime</div></div><div class="trait-metric"><div class="trait-metric-value">45ms</div><div class="trait-metric-label">Latency</div></div><div class="trait-metric"><div class="trait-metric-value">2%</div><div class="trait-metric-label">CPU</div></div><div class="trait-metric"><div class="trait-metric-value">1.2GB</div><div class="trait-metric-label">Memory</div></div></div><div class="trait-terminal"><div class="trait-terminal-header"><span class="trait-terminal-title">System Health</span></div><div class="trait-terminal-content"><div class="trait-command">docker ps</div><div class="trait-output trait-output-stdout">app: healthy</div><div class="trait-output trait-output-stdout">db: healthy</div><div class="trait-output trait-output-stdout">redis: healthy</div><div class="trait-output trait-output-success">All systems operational</div></div></div><div class="trait-alert trait-alert-info"><span class="trait-alert-icon">ℹ</span><span>Last checked: &lt;trait:timestamp value=&quot;2024-01-15T16:30:00Z&quot; /&gt;</span></div>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>

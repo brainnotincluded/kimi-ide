@@ -1,0 +1,185 @@
+{
+  "contributes": {
+    "configuration": {
+      "title": "Kimi Code Review",
+      "properties": {
+        "kimi.review.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable automatic code review",
+          "scope": "resource"
+        },
+        "kimi.review.runOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run code review on file save"
+        },
+        "kimi.review.runOnType": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run code review while typing (debounced)"
+        },
+        "kimi.review.debounceMs": {
+          "type": "number",
+          "default": 500,
+          "minimum": 100,
+          "maximum": 5000,
+          "description": "Debounce delay for onType review (milliseconds)"
+        },
+        "kimi.review.excludePatterns": {
+          "type": "array",
+          "default": [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/build/**",
+            "**/.git/**",
+            "**/coverage/**",
+            "**/*.min.js",
+            "**/*.d.ts"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Glob patterns to exclude from code review"
+        },
+        "kimi.review.includePatterns": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Glob patterns to include in code review (empty = all files)"
+        },
+        "kimi.review.reviewers.semantic.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable semantic analysis (logic bugs, edge cases, algorithmic complexity)"
+        },
+        "kimi.review.reviewers.semantic.severity": {
+          "type": "string",
+          "default": "warning",
+          "enum": ["error", "warning", "info", "hint"],
+          "enumDescriptions": [
+            "Show semantic issues as errors",
+            "Show semantic issues as warnings",
+            "Show semantic issues as info",
+            "Show semantic issues as hints"
+          ]
+        },
+        "kimi.review.reviewers.style.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable style analysis (naming conventions, code style, consistency)"
+        },
+        "kimi.review.reviewers.style.severity": {
+          "type": "string",
+          "default": "info",
+          "enum": ["error", "warning", "info", "hint"]
+        },
+        "kimi.review.reviewers.security.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable security analysis (vulnerabilities, secrets, unsafe patterns)"
+        },
+        "kimi.review.reviewers.security.severity": {
+          "type": "string",
+          "default": "error",
+          "enum": ["error", "warning", "info", "hint"]
+        },
+        "kimi.review.reviewers.performance.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable performance analysis (memory leaks, inefficient algorithms)"
+        },
+        "kimi.review.reviewers.performance.severity": {
+          "type": "string",
+          "default": "warning",
+          "enum": ["error", "warning", "info", "hint"]
+        },
+        "kimi.review.reviewers.test.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable test quality analysis (coverage, test quality, missing edge cases)"
+        },
+        "kimi.review.reviewers.test.severity": {
+          "type": "string",
+          "default": "info",
+          "enum": ["error", "warning", "info", "hint"]
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "kimi.review.runReview",
+        "title": "Run Code Review",
+        "category": "Kimi Review",
+        "icon": "$(search)"
+      },
+      {
+        "command": "kimi.review.runReviewOnFile",
+        "title": "Run Code Review on Current File",
+        "category": "Kimi Review",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "kimi.review.runReviewOnWorkspace",
+        "title": "Run Code Review on Workspace",
+        "category": "Kimi Review",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "kimi.review.clearResults",
+        "title": "Clear Review Results",
+        "category": "Kimi Review",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "kimi.review.fixAllIssues",
+        "title": "Fix All Auto-fixable Issues",
+        "category": "Kimi Review",
+        "icon": "$(lightbulb-autofix)"
+      },
+      {
+        "command": "kimi.review.showSummary",
+        "title": "Show Review Summary",
+        "category": "Kimi Review",
+        "icon": "$(info)"
+      },
+      {
+        "command": "kimi.review.toggleReview",
+        "title": "Toggle Automatic Review",
+        "category": "Kimi Review"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "kimi.review.runReviewOnFile",
+          "group": "9_cutcopypaste@6",
+          "when": "editorTextFocus"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "kimi.review.runReview",
+          "group": "2_workspace@5",
+          "when": "explorerResourceIsFile"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "kimi.review.runReviewOnFile",
+          "when": "editorTextFocus"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "kimi.review.runReviewOnFile",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "editorTextFocus"
+      }
+    ]
+  }
+}

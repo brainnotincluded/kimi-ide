@@ -1,0 +1,36 @@
+{
+  "name": "@traitor/ide-search",
+  "version": "1.0.0",
+  "description": "VS Code-like project-wide search for Traitor IDE",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts"
+  },
+  "keywords": [
+    "search",
+    "ripgrep",
+    "vscode",
+    "ide",
+    "electron",
+    "react"
+  ],
+  "author": "Traitor IDE Team",
+  "license": "MIT",
+  "dependencies": {
+    "minimatch": "^9.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "electron": ">=13.0.0",
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
+  }
+}

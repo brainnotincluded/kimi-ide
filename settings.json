@@ -1,0 +1,64 @@
+{
+  "$schema": "https://raw.githubusercontent.com/kimi-labs/kimi-vscode/main/schemas/settings.json",
+  
+  "kimi.enabled": true,
+  "kimi.model": "kimi-k2",
+  "kimi.apiKey": "${env:KIMI_API_KEY}",
+  "kimi.baseUrl": "https://api.moonshot.cn/v1",
+  
+  "kimi.chat.enabled": true,
+  "kimi.chat.preserveContext": true,
+  "kimi.chat.maxHistoryMessages": 50,
+  "kimi.chat.showTokenCount": true,
+  
+  "kimi.inline.enabled": true,
+  "kimi.inline.triggerOnIdle": true,
+  "kimi.inline.idleDelay": 500,
+  "kimi.inline.maxContextLines": 50,
+  
+  "kimi.completion.enabled": true,
+  "kimi.completion.triggerCharacters": [".", ":", "(", "[", "{"],
+  "kimi.completion.maxSuggestions": 3,
+  
+  "kimi.explain.enabled": true,
+  "kimi.explain.showDiff": true,
+  "kimi.explain.includeReferences": true,
+  
+  "kimi.refactor.enabled": true,
+  "kimi.refactor.confirmBeforeApply": true,
+  
+  "kimi.test.enabled": true,
+  "kimi.test.framework": "auto",
+  "kimi.test.generateOnSave": false,
+  
+  "kimi.doc.enabled": true,
+  "kimi.doc.style": "jsdoc",
+  "kimi.doc.includeExamples": true,
+  
+  "kimi.codeLens.enabled": true,
+  "kimi.codeLens.showExplain": true,
+  "kimi.codeLens.showGenerateTests": true,
+  "kimi.codeLens.showGenerateDocs": true,
+  
+  "kimi.telemetry.enabled": false,
+  "kimi.logging.level": "info",
+  
+  "kimi.advanced.timeout": 30000,
+  "kimi.advanced.maxRetries": 3,
+  "kimi.advanced.temperature": 0.2,
+  "kimi.advanced.topP": 0.95,
+  "kimi.advanced.maxTokens": 4096,
+  
+  "kimi.ui.theme": "auto",
+  "kimi.ui.fontSize": 14,
+  "kimi.ui.codeBlockTheme": "dark-plus",
+  "kimi.ui.showAvatars": true,
+  "kimi.ui.compactMode": false,
+  
+  "kimi.shortcuts.openChat": "ctrl+shift+k ctrl+shift+k",
+  "kimi.shortcuts.explainCode": "ctrl+shift+k ctrl+shift+e",
+  "kimi.shortcuts.generateTests": "ctrl+shift+k ctrl+shift+t",
+  "kimi.shortcuts.generateDocs": "ctrl+shift+k ctrl+shift+d",
+  "kimi.shortcuts.refactorCode": "ctrl+shift+k ctrl+shift+r",
+  "kimi.shortcuts.inlineCompletion": "ctrl+shift+k ctrl+shift+i"
+}

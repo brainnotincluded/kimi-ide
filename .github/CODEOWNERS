@@ -1,0 +1,27 @@
+# Code Owners for Kimi IDE
+# 
+# These owners will be the default owners for everything in the repo.
+# They will be requested for review when someone opens a pull request.
+
+# Global owners
+* @maintainers
+
+# Main process code
+/ide/src/main/ @backend-leads
+
+# Renderer process code  
+/ide/src/renderer/ @frontend-leads
+
+# Core functionality
+/ide/src/shared/ @core-leads
+
+# Build configuration
+/ide/webpack.config.js @devops-leads
+/ide/tsconfig*.json @devops-leads
+/ide/package.json @devops-leads
+
+# Documentation
+*.md @docs-leads
+
+# Security-sensitive code
+/ide/src/main/security/ @security-leads

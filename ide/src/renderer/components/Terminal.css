@@ -1,0 +1,64 @@
+.terminal-instance {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #1a1a18;
+}
+
+.terminal-content {
+  flex: 1;
+  position: relative;
+  padding: 8px;
+}
+
+.xterm-wrapper {
+  height: 100%;
+  width: 100%;
+}
+
+.xterm-wrapper .xterm {
+  height: 100%;
+  padding: 4px;
+}
+
+.terminal-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #6a6a62;
+  font-size: 13px;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #3a3a38;
+  border-top-color: #7c9a6d;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Status indicators */
+.pty-status {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.pty-status.full {
+  color: #7c9a6d;
+}
+
+.pty-status.limited {
+  color: #b85c57;
+}

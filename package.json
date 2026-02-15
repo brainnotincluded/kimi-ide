@@ -1,0 +1,331 @@
+{
+  "name": "kimi-ide",
+  "displayName": "Kimi IDE",
+  "description": "AI-powered coding assistant with inline editing, powered by Moonshot AI (Kimi)",
+  "version": "0.1.0",
+  "publisher": "kimi-ide",
+  "engines": {
+    "vscode": "^1.86.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Snippets",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "kimi",
+    "moonshot",
+    "inline edit",
+    "code completion",
+    "assistant"
+  ],
+  "activationEvents": [
+    "onCommand:kimi.inlineEdit",
+    "onCommand:kimi.quickChat",
+    "onCommand:kimi.explainCode"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Kimi IDE",
+      "properties": {
+        "kimi.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Your Kimi API Key from Moonshot AI",
+          "scope": "application"
+        },
+        "kimi.baseUrl": {
+          "type": "string",
+          "default": "https://api.moonshot.cn/v1",
+          "description": "Kimi API base URL",
+          "scope": "application"
+        },
+        "kimi.model": {
+          "type": "string",
+          "default": "moonshot-v1-8k",
+          "enum": [
+            "moonshot-v1-8k",
+            "moonshot-v1-32k",
+            "moonshot-v1-128k"
+          ],
+          "enumDescriptions": [
+            "8K context window - faster and cheaper",
+            "32K context window - balanced",
+            "128K context window - for large files"
+          ],
+          "description": "Kimi model to use",
+          "scope": "application"
+        },
+        "kimi.enableInlineCompletions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable AI-powered inline completions (ghost text)"
+        },
+        "kimi.hasSeenWelcome": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the user has seen the welcome message",
+          "scope": "application"
+        },
+        "kimi.enableLSP": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Language Server Protocol for AI-powered features"
+        },
+        "kimi.lsp.completionDebounceMs": {
+          "type": "number",
+          "default": 300,
+          "minimum": 100,
+          "maximum": 2000,
+          "description": "Debounce time for completion requests (ms)"
+        },
+        "kimi.lsp.maxCompletions": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Maximum number of AI completions to show"
+        },
+        "kimi.lsp.cacheTimeout": {
+          "type": "number",
+          "default": 300,
+          "minimum": 60,
+          "maximum": 600,
+          "description": "Cache timeout for LSP results (seconds)"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "kimi.inlineEdit",
+        "title": "Edit Selection",
+        "category": "Kimi",
+        "icon": "$(edit)",
+        "enablement": "editorHasSelection"
+      },
+      {
+        "command": "kimi.acceptEdit",
+        "title": "Accept Edit",
+        "category": "Kimi",
+        "icon": "$(check)"
+      },
+      {
+        "command": "kimi.rejectEdit",
+        "title": "Reject Edit",
+        "category": "Kimi",
+        "icon": "$(x)"
+      },
+      {
+        "command": "kimi.showDiff",
+        "title": "Show Diff",
+        "category": "Kimi",
+        "icon": "$(diff)"
+      },
+      {
+        "command": "kimi.explainCode",
+        "title": "Explain Code",
+        "category": "Kimi",
+        "icon": "$(question)"
+      },
+      {
+        "command": "kimi.fixCode",
+        "title": "Fix Code",
+        "category": "Kimi",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "kimi.generateTests",
+        "title": "Generate Tests",
+        "category": "Kimi",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "kimi.optimizeCode",
+        "title": "Optimize Code",
+        "category": "Kimi",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "kimi.addDocs",
+        "title": "Add Documentation",
+        "category": "Kimi",
+        "icon": "$(book)"
+      },
+      {
+        "command": "kimi.refactorCode",
+        "title": "Refactor Code",
+        "category": "Kimi",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "kimi.configureApiKey",
+        "title": "Configure API Key",
+        "category": "Kimi",
+        "icon": "$(key)"
+      },
+      {
+        "command": "kimi.validateApiKey",
+        "title": "Validate API Key",
+        "category": "Kimi",
+        "icon": "$(check)"
+      },
+      {
+        "command": "kimi.openSettings",
+        "title": "Open Settings",
+        "category": "Kimi",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "kimi.quickChat",
+        "title": "Quick Chat",
+        "category": "Kimi",
+        "icon": "$(comment)"
+      },
+      {
+        "command": "kimi.chatWithContext",
+        "title": "Chat with Current File",
+        "category": "Kimi",
+        "icon": "$(comment-discussion)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "kimi.inlineEdit",
+        "key": "cmd+k",
+        "mac": "cmd+k",
+        "linux": "ctrl+k",
+        "win": "ctrl+k",
+        "when": "editorHasSelection && editorTextFocus"
+      },
+      {
+        "command": "kimi.acceptEdit",
+        "key": "cmd+enter",
+        "mac": "cmd+enter",
+        "linux": "ctrl+enter",
+        "win": "ctrl+enter",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "kimi.rejectEdit",
+        "key": "esc",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "kimi.quickChat",
+        "key": "cmd+shift+k",
+        "mac": "cmd+shift+k",
+        "linux": "ctrl+shift+k",
+        "win": "ctrl+shift+k"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "submenu": "kimi.menu",
+          "group": "9_cutcopypaste@5",
+          "when": "editorHasSelection"
+        }
+      ],
+      "kimi.menu": [
+        {
+          "command": "kimi.inlineEdit",
+          "group": "inline@1"
+        },
+        {
+          "command": "kimi.explainCode",
+          "group": "actions@1"
+        },
+        {
+          "command": "kimi.fixCode",
+          "group": "actions@2"
+        },
+        {
+          "command": "kimi.optimizeCode",
+          "group": "actions@3"
+        },
+        {
+          "command": "kimi.generateTests",
+          "group": "actions@4"
+        },
+        {
+          "command": "kimi.addDocs",
+          "group": "actions@5"
+        },
+        {
+          "command": "kimi.refactorCode",
+          "group": "actions@6"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "kimi.inlineEdit",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "kimi.acceptEdit",
+          "when": "false"
+        },
+        {
+          "command": "kimi.rejectEdit",
+          "when": "false"
+        },
+        {
+          "command": "kimi.showDiff",
+          "when": "false"
+        }
+      ]
+    },
+    "submenus": [
+      {
+        "id": "kimi.menu",
+        "label": "Kimi",
+        "icon": "$(lightbulb)"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "node scripts/build.js --production",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "build": "node scripts/build.js --production",
+    "build:dev": "node scripts/build.js",
+    "package": "node scripts/package.js",
+    "package:fast": "node scripts/package.js --skip-build",
+    "install-local": "node scripts/install-local.js",
+    "install-force": "node scripts/install-local.js --force",
+    "clean": "rm -rf out dist packages *.vsix",
+    "clean:all": "npm run clean && rm -rf node_modules",
+    "type-check": "tsc --noEmit",
+    "ci": "npm ci && npm run lint && npm run type-check && npm run build && npm test",
+    "publish": "vsce publish"
+  },
+  "dependencies": {
+    "vscode-jsonrpc": "^8.2.1",
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11"
+  },
+  "devDependencies": {
+    "@types/linkify-it": "^2.1.0",
+    "@types/markdown-it": "^12.2.3",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.86.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.1",
+    "@typescript-eslint/parser": "^6.19.1",
+    "@vscode/test-electron": "^2.3.9",
+    "@vscode/vsce": "^2.23.0",
+    "eslint": "^8.56.0",
+    "glob": "^10.3.10",
+    "mocha": "^10.2.0",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "webpack": "^5.90.0",
+    "webpack-cli": "^5.1.4"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "@ide-traitor/web-language-support",
+  "version": "1.0.0",
+  "description": "Web Language Support for IDE Traitor (TypeScript/JavaScript/JSON/YAML/TOML)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "lint": "eslint src/**/*.ts",
+    "test": "jest"
+  },
+  "keywords": [
+    "ide",
+    "typescript",
+    "javascript",
+    "json",
+    "yaml",
+    "toml",
+    "language-server"
+  ],
+  "author": "IDE Traitor Team",
+  "license": "MIT",
+  "dependencies": {
+    "yaml": "^2.3.4",
+    "@iarna/toml": "^2.2.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/iarna__toml": "^2.0.2",
+    "typescript": "^5.3.0",
+    "eslint": "^8.50.0",
+    "prettier": "^3.1.0"
+  },
+  "peerDependencies": {
+    "electron": ">=25.0.0",
+    "react": ">=18.0.0"
+  }
+}

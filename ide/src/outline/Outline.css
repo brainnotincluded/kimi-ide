@@ -1,0 +1,337 @@
+/**
+ * Outline View Styles
+ * CSS variables and styles for the outline panel
+ */
+
+/* CSS Variables */
+:root {
+  /* Outline panel colors */
+  --outline-bg: var(--side-bar-bg, #252526);
+  --outline-fg: var(--side-bar-fg, #cccccc);
+  --outline-border: var(--border-color, #3c3c3c);
+  
+  /* Selection colors */
+  --outline-selection-bg: var(--list-active-selection-bg, #094771);
+  --outline-selection-fg: var(--list-active-selection-fg, #ffffff);
+  --outline-hover-bg: var(--list-hover-bg, #2a2d2e);
+  
+  /* Symbol icon colors */
+  --symbol-class-color: #ee9d28;
+  --symbol-interface-color: #75beff;
+  --symbol-function-color: #b180d7;
+  --symbol-method-color: #b180d7;
+  --symbol-variable-color: #75beff;
+  --symbol-field-color: #75beff;
+  --symbol-enum-color: #ee9d28;
+  --symbol-struct-color: #ee9d28;
+  --symbol-constant-color: #cccccc;
+  --symbol-namespace-color: #4ec9b0;
+  --symbol-package-color: #cccccc;
+  --symbol-property-color: #cccccc;
+  --symbol-keyword-color: #4ec9b0;
+  
+  /* Deprecated */
+  --symbol-deprecated-opacity: 0.6;
+}
+
+/* Outline Panel */
+.outline-panel {
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Symbol Tree */
+.symbol-tree {
+  user-select: none;
+}
+
+.symbol-tree-node {
+  transition: background-color 0.1s ease;
+}
+
+.symbol-tree-node:hover:not(.selected) {
+  background-color: var(--outline-hover-bg);
+}
+
+.symbol-tree-node.selected {
+  background-color: var(--outline-selection-bg);
+  color: var(--outline-selection-fg);
+}
+
+.symbol-tree-node.highlighted {
+  border-left-color: var(--focus-border, #007acc);
+}
+
+/* Tree toggle */
+.tree-node-toggle {
+  transition: transform 0.15s ease;
+}
+
+.tree-node-toggle:hover {
+  opacity: 0.8;
+}
+
+/* Symbol icons */
+.symbol-icon {
+  flex-shrink: 0;
+}
+
+/* Kind-specific colors */
+.symbol-icon[data-kind="class"] { color: var(--symbol-class-color); }
+.symbol-icon[data-kind="interface"] { color: var(--symbol-interface-color); }
+.symbol-icon[data-kind="function"] { color: var(--symbol-function-color); }
+.symbol-icon[data-kind="method"] { color: var(--symbol-method-color); }
+.symbol-icon[data-kind="variable"] { color: var(--symbol-variable-color); }
+.symbol-icon[data-kind="field"] { color: var(--symbol-field-color); }
+.symbol-icon[data-kind="enum"] { color: var(--symbol-enum-color); }
+.symbol-icon[data-kind="struct"] { color: var(--symbol-struct-color); }
+.symbol-icon[data-kind="constant"] { color: var(--symbol-constant-color); }
+.symbol-icon[data-kind="namespace"] { color: var(--symbol-namespace-color); }
+.symbol-icon[data-kind="package"] { color: var(--symbol-package-color); }
+
+/* Symbol name */
+.tree-node-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Symbol detail */
+.tree-node-detail {
+  flex-shrink: 1;
+  max-width: 50%;
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+.breadcrumb-item {
+  transition: background-color 0.15s ease;
+}
+
+.breadcrumb-item:hover {
+  text-decoration: none;
+}
+
+.breadcrumb-item.active {
+  font-weight: 500;
+}
+
+.breadcrumb-separator {
+  user-select: none;
+}
+
+/* Go to Symbol Picker */
+.goto-symbol-picker-overlay {
+  animation: fadeIn 0.1s ease;
+}
+
+.goto-symbol-picker {
+  animation: slideDown 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Highlighted text in picker */
+.goto-symbol-picker mark {
+  background: transparent;
+  color: #4ec9b0;
+  font-weight: 600;
+}
+
+/* Outline header */
+.outline-header {
+  background-color: var(--side-bar-section-header-bg, #252526);
+}
+
+/* Filter buttons */
+.outline-filter-btn {
+  transition: all 0.15s ease;
+}
+
+.outline-filter-btn:hover {
+  background-color: var(--outline-hover-bg);
+}
+
+.outline-filter-btn.active {
+  background-color: var(--button-bg, #0e639c);
+  color: var(--button-fg, #ffffff);
+}
+
+/* Loading state */
+.outline-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: var(--description-foreground, #858585);
+}
+
+.outline-loading::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--outline-border);
+  border-top-color: var(--progress-bar-bg, #0e639c);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty state */
+.outline-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--description-foreground, #858585);
+  text-align: center;
+}
+
+.outline-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+/* Status bar */
+.outline-status {
+  background-color: var(--status-bar-bg, #1e1e1e);
+  border-top: 1px solid var(--outline-border);
+}
+
+/* Scrollbar styling */
+.symbol-tree::-webkit-scrollbar,
+.goto-symbol-picker .results-list::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.symbol-tree::-webkit-scrollbar-track,
+.goto-symbol-picker .results-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.symbol-tree::-webkit-scrollbar-thumb,
+.goto-symbol-picker .results-list::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-bg, #424242);
+  border-radius: 5px;
+}
+
+.symbol-tree::-webkit-scrollbar-thumb:hover,
+.goto-symbol-picker .results-list::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover-bg, #4f4f4f);
+}
+
+/* Accessibility indicators */
+.symbol-accessibility {
+  font-size: 8px;
+  font-weight: bold;
+}
+
+.symbol-accessibility.private { color: #f48771; }
+.symbol-accessibility.protected { color: #ee9d28; }
+.symbol-accessibility.public { color: #4ec9b0; }
+
+/* Deprecated styling */
+.symbol-deprecated {
+  text-decoration: line-through;
+  opacity: var(--symbol-deprecated-opacity);
+}
+
+/* Tag indicators */
+.symbol-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 2px;
+  margin-left: 4px;
+}
+
+.symbol-tag.static {
+  background-color: rgba(177, 128, 215, 0.2);
+  color: #b180d7;
+}
+
+.symbol-tag.async {
+  background-color: rgba(78, 201, 176, 0.2);
+  color: #4ec9b0;
+}
+
+.symbol-tag.abstract {
+  background-color: rgba(238, 157, 40, 0.2);
+  color: #ee9d28;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 300px) {
+  .outline-header {
+    padding: 4px 8px;
+  }
+  
+  .symbol-tree-node {
+    padding: 2px 4px;
+  }
+  
+  .tree-node-detail {
+    display: none;
+  }
+}
+
+/* Focus styles */
+.outline-panel:focus-visible,
+.goto-symbol-picker:focus-visible {
+  outline: 2px solid var(--focus-border, #007acc);
+  outline-offset: -2px;
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+  .symbol-tree-node.selected {
+    outline: 1px solid var(--outline-selection-fg);
+  }
+  
+  .breadcrumb-item.active {
+    text-decoration: underline;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .symbol-tree-node,
+  .tree-node-toggle,
+  .breadcrumb-item,
+  .goto-symbol-picker-overlay,
+  .goto-symbol-picker {
+    transition: none;
+    animation: none;
+  }
+}

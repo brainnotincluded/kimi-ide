@@ -1,0 +1,482 @@
+{
+    "name": "traitor-cpp",
+    "displayName": "C/C++ Language Support",
+    "description": "C/C++ language support for Traitor IDE with CMake, clangd, and debugging",
+    "version": "1.0.0",
+    "publisher": "traitor",
+    "engines": {
+        "vscode": "^1.74.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Debuggers",
+        "Formatters",
+        "Linters"
+    ],
+    "keywords": [
+        "c++",
+        "cpp",
+        "c",
+        "cmake",
+        "clangd",
+        "gdb",
+        "lldb"
+    ],
+    "activationEvents": [
+        "onLanguage:cpp",
+        "onLanguage:c",
+        "workspaceContains:**/CMakeLists.txt",
+        "workspaceContains:**/*.{cpp,c,h,hpp}"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "languages": [
+            {
+                "id": "cpp",
+                "aliases": ["C++", "cpp", "c++"],
+                "extensions": [".cpp", ".cc", ".cxx", ".c++", ".hpp", ".hxx", ".h++", ".inl", ".ipp"],
+                "configuration": "./language-configuration.json"
+            },
+            {
+                "id": "c",
+                "aliases": ["C", "c"],
+                "extensions": [".c", ".h"],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "cpp",
+                "scopeName": "source.cpp",
+                "path": "./syntaxes/cpp.tmLanguage.json"
+            },
+            {
+                "language": "c",
+                "scopeName": "source.c",
+                "path": "./syntaxes/c.tmLanguage.json"
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "C/C++ Configuration",
+            "properties": {
+                "cpp.compiler": {
+                    "type": "string",
+                    "enum": ["gcc", "clang", "cl"],
+                    "default": "gcc",
+                    "description": "C++ compiler to use",
+                    "scope": "resource"
+                },
+                "cpp.standard": {
+                    "type": "string",
+                    "enum": ["c++11", "c++14", "c++17", "c++20", "c++23"],
+                    "default": "c++17",
+                    "description": "C++ language standard",
+                    "scope": "resource"
+                },
+                "cpp.includePaths": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [],
+                    "description": "Additional include paths for IntelliSense",
+                    "scope": "resource"
+                },
+                "cpp.defines": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "default": {},
+                    "description": "Preprocessor definitions",
+                    "scope": "resource"
+                },
+                "cpp.buildDirectory": {
+                    "type": "string",
+                    "default": "build",
+                    "description": "CMake build directory (relative to workspace root)",
+                    "scope": "resource"
+                },
+                "cpp.debugger": {
+                    "type": "string",
+                    "enum": ["gdb", "lldb"],
+                    "default": "gdb",
+                    "description": "Debugger to use",
+                    "scope": "resource"
+                },
+                "cpp.debugArgs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [],
+                    "description": "Arguments to pass to the debugged program",
+                    "scope": "resource"
+                },
+                "cpp.debugEnv": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "default": {},
+                    "description": "Environment variables for debugging",
+                    "scope": "resource"
+                },
+                "cpp.clangdPath": {
+                    "type": "string",
+                    "default": "clangd",
+                    "description": "Path to clangd executable",
+                    "scope": "resource"
+                },
+                "cpp.clangFormatStyle": {
+                    "type": "string",
+                    "default": "file",
+                    "description": "clang-format style (file, LLVM, Google, Chromium, Mozilla, WebKit, or custom)",
+                    "scope": "resource"
+                },
+                "cpp.clangTidyChecks": {
+                    "type": "string",
+                    "default": "cppcoreguidelines-*,modernize-*,performance-*,portability-*,readability-*",
+                    "description": "clang-tidy checks to enable",
+                    "scope": "resource"
+                },
+                "cpp.cppcheckEnable": {
+                    "type": "string",
+                    "default": "all",
+                    "description": "cppcheck checks to enable",
+                    "scope": "resource"
+                },
+                "cpp.parallelJobs": {
+                    "type": "number",
+                    "default": 0,
+                    "description": "Number of parallel build jobs (0 = use all CPUs)",
+                    "scope": "resource"
+                }
+            }
+        },
+        "commands": [
+            {
+                "command": "cpp:detectCompilers",
+                "title": "Detect Compilers",
+                "category": "C/C++"
+            },
+            {
+                "command": "cpp:configureCMake",
+                "title": "Configure CMake",
+                "category": "C/C++",
+                "icon": "$(gear)"
+            },
+            {
+                "command": "cpp:build",
+                "title": "Build",
+                "category": "C/C++",
+                "icon": "$(play)"
+            },
+            {
+                "command": "cpp:buildAll",
+                "title": "Build All",
+                "category": "C/C++"
+            },
+            {
+                "command": "cpp:clean",
+                "title": "Clean Build",
+                "category": "C/C++",
+                "icon": "$(trash)"
+            },
+            {
+                "command": "cpp:run",
+                "title": "Run Executable",
+                "category": "C/C++",
+                "icon": "$(run)"
+            },
+            {
+                "command": "cpp:debug",
+                "title": "Debug",
+                "category": "C/C++",
+                "icon": "$(debug-alt)"
+            },
+            {
+                "command": "cpp:getDiagnostics",
+                "title": "Get Diagnostics",
+                "category": "C/C++"
+            },
+            {
+                "command": "cpp:format",
+                "title": "Format Document",
+                "category": "C/C++"
+            },
+            {
+                "command": "cpp:getCMakeInfo",
+                "title": "Get CMake Info",
+                "category": "C/C++"
+            },
+            {
+                "command": "cpp:setCompiler",
+                "title": "Set Compiler",
+                "category": "C/C++"
+            },
+            {
+                "command": "cpp:getCompletions",
+                "title": "Get Completions",
+                "category": "C/C++"
+            },
+            {
+                "command": "cpp.showStatusMenu",
+                "title": "Show C++ Menu",
+                "category": "C/C++"
+            },
+            {
+                "command": "cpp.quickBuild",
+                "title": "Quick Build",
+                "category": "C/C++",
+                "keybinding": {
+                    "command": "cpp.quickBuild",
+                    "key": "ctrl+shift+b",
+                    "mac": "cmd+shift+b",
+                    "when": "editorLangId == cpp || editorLangId == c"
+                }
+            },
+            {
+                "command": "cpp.quickRun",
+                "title": "Quick Run",
+                "category": "C/C++",
+                "keybinding": {
+                    "command": "cpp.quickRun",
+                    "key": "ctrl+shift+r",
+                    "mac": "cmd+shift+r",
+                    "when": "editorLangId == cpp || editorLangId == c"
+                }
+            },
+            {
+                "command": "cpp.newClass",
+                "title": "New C++ Class",
+                "category": "C/C++"
+            },
+            {
+                "command": "cpp.switchHeaderSource",
+                "title": "Switch Header/Source",
+                "category": "C/C++",
+                "keybinding": {
+                    "command": "cpp.switchHeaderSource",
+                    "key": "alt+o",
+                    "mac": "alt+cmd+o",
+                    "when": "editorLangId == cpp || editorLangId == c"
+                }
+            },
+            {
+                "command": "cpp.configureCMake",
+                "title": "Configure",
+                "category": "CMake"
+            },
+            {
+                "command": "cpp.build",
+                "title": "Build",
+                "category": "CMake"
+            },
+            {
+                "command": "cpp.clean",
+                "title": "Clean",
+                "category": "CMake"
+            },
+            {
+                "command": "cpp.cleanReconfigure",
+                "title": "Clean Reconfigure",
+                "category": "CMake"
+            },
+            {
+                "command": "cpp.refreshCMakePanel",
+                "title": "Refresh",
+                "category": "CMake",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "cpp.buildTarget",
+                "title": "Build Target",
+                "category": "CMake"
+            },
+            {
+                "command": "cpp.selectTarget",
+                "title": "Select Target",
+                "category": "CMake"
+            },
+            {
+                "command": "cpp.addIncludeGuard",
+                "title": "Add Include Guard",
+                "category": "C/C++"
+            }
+        ],
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "cpp.switchHeaderSource",
+                    "when": "editorLangId == cpp || editorLangId == c",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "cpp:run",
+                    "when": "editorLangId == cpp || editorLangId == c",
+                    "group": "run@1"
+                },
+                {
+                    "command": "cpp:debug",
+                    "when": "editorLangId == cpp || editorLangId == c",
+                    "group": "run@2"
+                }
+            ],
+            "explorer/context": [
+                {
+                    "command": "cpp:run",
+                    "when": "resourceExtname == .cpp || resourceExtname == .c",
+                    "group": "run@1"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "cpp.refreshCMakePanel",
+                    "when": "view == cmakePanel",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "cpp.buildTarget",
+                    "when": "view == cmakePanel && viewItem == cmakeTarget",
+                    "group": "inline"
+                }
+            ]
+        },
+        "views": {
+            "explorer": [
+                {
+                    "id": "cmakePanel",
+                    "name": "CMake",
+                    "when": "cpp.cmakeAvailable",
+                    "icon": "$(tools)",
+                    "contextualTitle": "CMake Project"
+                }
+            ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "cpp-explorer",
+                    "title": "C/C++",
+                    "icon": "$(file-code)"
+                }
+            ]
+        },
+        "keybindings": [
+            {
+                "command": "cpp.quickBuild",
+                "key": "ctrl+shift+b",
+                "mac": "cmd+shift+b",
+                "when": "editorLangId == cpp || editorLangId == c"
+            },
+            {
+                "command": "cpp.quickRun",
+                "key": "ctrl+shift+r",
+                "mac": "cmd+shift+r",
+                "when": "editorLangId == cpp || editorLangId == c"
+            },
+            {
+                "command": "cpp.switchHeaderSource",
+                "key": "alt+o",
+                "mac": "alt+cmd+o",
+                "when": "editorLangId == cpp || editorLangId == c"
+            }
+        ],
+        "taskDefinitions": [
+            {
+                "type": "cpp",
+                "required": ["task"],
+                "properties": {
+                    "task": {
+                        "type": "string",
+                        "description": "The task to execute",
+                        "enum": ["configure", "build", "clean", "run"]
+                    },
+                    "target": {
+                        "type": "string",
+                        "description": "CMake target to build"
+                    }
+                }
+            }
+        ],
+        "debuggers": [
+            {
+                "type": "cppdbg",
+                "label": "C/C++ GDB/LLDB",
+                "program": "./debugAdapters/bin/OpenDebugAD7",
+                "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": ["program"],
+                        "properties": {
+                            "program": {
+                                "type": "string",
+                                "description": "Path to program executable"
+                            },
+                            "args": {
+                                "type": "array",
+                                "description": "Command line arguments"
+                            },
+                            "stopAtEntry": {
+                                "type": "boolean",
+                                "description": "Stop at program entry"
+                            },
+                            "cwd": {
+                                "type": "string",
+                                "description": "Working directory"
+                            },
+                            "environment": {
+                                "type": "array",
+                                "description": "Environment variables"
+                            },
+                            "externalConsole": {
+                                "type": "boolean",
+                                "description": "Use external console"
+                            },
+                            "MIMode": {
+                                "type": "string",
+                                "enum": ["gdb", "lldb"],
+                                "description": "MI debugger mode"
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "name": "C++ Debug",
+                        "type": "cppdbg",
+                        "request": "launch",
+                        "program": "${workspaceFolder}/build/main",
+                        "args": [],
+                        "stopAtEntry": false,
+                        "cwd": "${workspaceFolder}",
+                        "environment": [],
+                        "externalConsole": false,
+                        "MIMode": "gdb",
+                        "preLaunchTask": "cpp: build"
+                    }
+                ]
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "lint": "eslint src --ext ts",
+        "test": "npm run compile && node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.74.0",
+        "@types/node": "18.x",
+        "typescript": "^4.9.4",
+        "@typescript-eslint/eslint-plugin": "^5.45.0",
+        "@typescript-eslint/parser": "^5.45.0",
+        "eslint": "^8.28.0"
+    },
+    "dependencies": {}
+}

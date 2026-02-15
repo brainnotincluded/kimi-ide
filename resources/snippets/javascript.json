@@ -1,0 +1,51 @@
+{
+  "Kimi Explain": {
+    "prefix": "kimi-explain",
+    "description": "Ask Kimi to explain this code",
+    "body": [
+      "// @kimi explain"
+    ]
+  },
+  "Kimi Refactor": {
+    "prefix": "kimi-refactor",
+    "description": "Ask Kimi to refactor this code",
+    "body": [
+      "// @kimi refactor"
+    ]
+  },
+  "Kimi Test": {
+    "prefix": "kimi-test",
+    "description": "Ask Kimi to generate tests",
+    "body": [
+      "// @kimi test"
+    ]
+  },
+  "Kimi Document": {
+    "prefix": "kimi-doc",
+    "description": "Ask Kimi to document this code",
+    "body": [
+      "// @kimi document"
+    ]
+  },
+  "Kimi Fix": {
+    "prefix": "kimi-fix",
+    "description": "Ask Kimi to fix issues in this code",
+    "body": [
+      "// @kimi fix"
+    ]
+  },
+  "Kimi Modernize": {
+    "prefix": "kimi-modernize",
+    "description": "Ask Kimi to modernize to ES6+",
+    "body": [
+      "// @kimi modernize to ES6+"
+    ]
+  },
+  "Kimi Add JSDoc": {
+    "prefix": "kimi-jsdoc",
+    "description": "Ask Kimi to add JSDoc comments",
+    "body": [
+      "// @kimi add JSDoc"
+    ]
+  }
+}

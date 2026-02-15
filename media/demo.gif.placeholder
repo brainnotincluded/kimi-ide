@@ -1,0 +1,17 @@
+# Demo GIF Placeholder
+
+This is a placeholder file for the demo.gif animation.
+
+To create the actual demo.gif:
+1. Use a screen recording tool (e.g., ScreenToGif, LICEcap, or OBS Studio)
+2. Record the following features:
+   - Opening Kimi IDE panel
+   - Starting a new chat
+   - Asking a coding question
+   - Receiving AI response with code
+   - Using code actions (copy, insert, create file)
+   - Using @ commands for context
+3. Recommended size: 800x600 or 1200x800
+4. Keep under 5MB for faster loading
+
+Replace this file with the actual demo.gif when ready.

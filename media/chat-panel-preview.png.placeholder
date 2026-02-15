@@ -1,0 +1,16 @@
+# Chat Panel Preview Placeholder
+
+This is a placeholder for the chat panel preview screenshot.
+
+To create:
+1. Open VS Code with Kimi IDE extension
+2. Open the Kimi chat panel (Ctrl+Shift+K or Cmd+Shift+K)
+3. Take a screenshot showing:
+   - The chat interface
+   - A sample conversation
+   - Code blocks with syntax highlighting
+   - Action buttons below code
+4. Recommended size: 800x600
+5. Save as PNG with transparency if needed
+
+Replace this file with actual chat-panel-preview.png when ready.

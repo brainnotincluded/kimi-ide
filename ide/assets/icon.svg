@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Dark background -->
+  <rect width="512" height="512" rx="128" fill="#1a1a18"/>
+  <!-- Green T letter -->
+  <line x1="96" y1="128" x2="416" y2="128" stroke="#7c9a6d" stroke-width="64" stroke-linecap="round"/>
+  <line x1="256" y1="128" x2="256" y2="384" stroke="#7c9a6d" stroke-width="64" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,174 @@
+/**
+ * Rust Status Bar Styles
+ */
+
+.rust-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: var(--rust-bg, #1e1e1e);
+  border-top: 1px solid var(--rust-border, #333);
+  font-size: 12px;
+  color: var(--rust-text, #cccccc);
+  position: relative;
+}
+
+.rust-status-bar--loading {
+  opacity: 0.7;
+}
+
+.rust-status-bar--error {
+  background: var(--rust-error-bg, #3a1f1f);
+  border-color: var(--rust-error-border, #5c2a2a);
+}
+
+.rust-status-bar__icon {
+  font-size: 14px;
+  margin-right: 4px;
+}
+
+.rust-status-bar__info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+.rust-status-bar__info:hover {
+  background: var(--rust-hover-bg, #2a2a2a);
+}
+
+.rust-status-bar__version {
+  font-weight: 500;
+  color: var(--rust-version-color, #dea584);
+}
+
+.rust-status-bar__toolchain {
+  background: var(--rust-toolchain-bg, #3d3d3d);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.rust-status-bar__toolchain[data-toolchain="nightly"] {
+  background: var(--rust-nightly-bg, #4a3d1f);
+  color: var(--rust-nightly-text, #e3c066);
+}
+
+.rust-status-bar__toolchain[data-toolchain="beta"] {
+  background: var(--rust-beta-bg, #3d4a1f);
+  color: var(--rust-beta-text, #a8e366);
+}
+
+.rust-status-bar__project {
+  color: var(--rust-project-color, #9cdcfe);
+  font-weight: 500;
+}
+
+.rust-status-bar__project::before {
+  content: '|';
+  margin-right: 6px;
+  color: var(--rust-divider, #555);
+}
+
+.rust-status-bar__actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.rust-status-bar__btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--rust-btn-bg, #3d3d3d);
+  border: 1px solid var(--rust-btn-border, #4a4a4a);
+  border-radius: 3px;
+  color: var(--rust-btn-text, #cccccc);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rust-status-bar__btn:hover:not(:disabled) {
+  background: var(--rust-btn-hover-bg, #4a4a4a);
+  border-color: var(--rust-btn-hover-border, #5a5a5a);
+}
+
+.rust-status-bar__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rust-status-bar__btn--loading {
+  animation: rust-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes rust-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.rust-status-bar__action {
+  padding: 2px 8px;
+  background: var(--rust-action-bg, #0e639c);
+  border: none;
+  border-radius: 3px;
+  color: white;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.rust-status-bar__action:hover {
+  background: var(--rust-action-hover-bg, #1177bb);
+}
+
+.rust-status-bar__result {
+  margin-left: 4px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.rust-status-bar__result--success {
+  color: var(--rust-success, #89d185);
+}
+
+.rust-status-bar__result--error {
+  color: var(--rust-error, #f48771);
+}
+
+.rust-status-bar__tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 4px;
+  padding: 8px 12px;
+  background: var(--rust-tooltip-bg, #252526);
+  border: 1px solid var(--rust-tooltip-border, #3e3e42);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  min-width: 200px;
+}
+
+.rust-status-bar__tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.rust-status-bar__tooltip-row span:first-child {
+  color: var(--rust-tooltip-label, #858585);
+}
+
+.rust-status-bar__tooltip-row span:last-child {
+  color: var(--rust-tooltip-value, #cccccc);
+  font-family: monospace;
+}

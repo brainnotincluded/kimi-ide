@@ -1,0 +1,51 @@
+{
+  "Kimi Explain": {
+    "prefix": "kimi-explain",
+    "description": "Ask Kimi to explain this code",
+    "body": [
+      "// @kimi explain"
+    ]
+  },
+  "Kimi Refactor": {
+    "prefix": "kimi-refactor",
+    "description": "Ask Kimi to refactor this code",
+    "body": [
+      "// @kimi refactor"
+    ]
+  },
+  "Kimi Test": {
+    "prefix": "kimi-test",
+    "description": "Ask Kimi to generate tests",
+    "body": [
+      "// @kimi test"
+    ]
+  },
+  "Kimi Fix": {
+    "prefix": "kimi-fix",
+    "description": "Ask Kimi to fix issues",
+    "body": [
+      "// @kimi fix"
+    ]
+  },
+  "Kimi Add Comments": {
+    "prefix": "kimi-comments",
+    "description": "Ask Kimi to add Go doc comments",
+    "body": [
+      "// @kimi add Go doc comments"
+    ]
+  },
+  "Kimi Handle Errors": {
+    "prefix": "kimi-errors",
+    "description": "Ask Kimi to improve error handling",
+    "body": [
+      "// @kimi improve error handling"
+    ]
+  },
+  "Kimi Optimize": {
+    "prefix": "kimi-optimize",
+    "description": "Ask Kimi to optimize",
+    "body": [
+      "// @kimi optimize"
+    ]
+  }
+}

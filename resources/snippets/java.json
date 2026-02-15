@@ -1,0 +1,51 @@
+{
+  "Kimi Explain": {
+    "prefix": "kimi-explain",
+    "description": "Ask Kimi to explain this code",
+    "body": [
+      "// @kimi explain"
+    ]
+  },
+  "Kimi Refactor": {
+    "prefix": "kimi-refactor",
+    "description": "Ask Kimi to refactor this code",
+    "body": [
+      "// @kimi refactor"
+    ]
+  },
+  "Kimi Test": {
+    "prefix": "kimi-test",
+    "description": "Ask Kimi to generate JUnit tests",
+    "body": [
+      "// @kimi generate JUnit tests"
+    ]
+  },
+  "Kimi Document": {
+    "prefix": "kimi-doc",
+    "description": "Ask Kimi to add Javadoc",
+    "body": [
+      "// @kimi add Javadoc"
+    ]
+  },
+  "Kimi Fix": {
+    "prefix": "kimi-fix",
+    "description": "Ask Kimi to fix issues",
+    "body": [
+      "// @kimi fix"
+    ]
+  },
+  "Kimi Modernize": {
+    "prefix": "kimi-modernize",
+    "description": "Ask Kimi to modernize code",
+    "body": [
+      "// @kimi modernize"
+    ]
+  },
+  "Kimi Stream": {
+    "prefix": "kimi-stream",
+    "description": "Ask Kimi to use Streams",
+    "body": [
+      "// @kimi convert to Streams"
+    ]
+  }
+}

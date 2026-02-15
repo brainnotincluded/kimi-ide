@@ -1,0 +1,154 @@
+.debug-console {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #1a1a18;
+}
+
+.console-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #222220;
+  border-bottom: 1px solid #2a2a28;
+}
+
+.console-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #a0a098;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.clear-btn {
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid #3a3a38;
+  border-radius: 4px;
+  color: #6a6a62;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.clear-btn:hover {
+  background: #2a2a28;
+  color: #d4d4d0;
+}
+
+.console-messages {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.console-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #6a6a62;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.console-message {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.console-timestamp {
+  color: #6a6a62;
+  flex-shrink: 0;
+}
+
+.console-type {
+  color: #7c9a6d;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  font-size: 10px;
+  padding-top: 1px;
+}
+
+.console-message.error .console-type {
+  color: #b85c57;
+}
+
+.console-message.warn .console-type {
+  color: #a89984;
+}
+
+.console-message.info .console-type {
+  color: #7daea3;
+}
+
+.console-message.eval .console-type {
+  color: #b48ead;
+}
+
+.console-content {
+  color: #d4d4d0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  flex: 1;
+}
+
+.console-message.error .console-content {
+  color: #c97b75;
+}
+
+.console-message.warn .console-content {
+  color: #d5c4a1;
+}
+
+.console-input-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #222220;
+  border-top: 1px solid #2a2a28;
+}
+
+.console-prompt {
+  color: #7c9a6d;
+  font-weight: bold;
+}
+
+.console-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #d4d4d0;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  outline: none;
+}
+
+.console-input::placeholder {
+  color: #6a6a62;
+}
+
+/* Scrollbar */
+.console-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.console-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.console-messages::-webkit-scrollbar-thumb {
+  background: #3a3a38;
+  border-radius: 4px;
+}
+
+.console-messages::-webkit-scrollbar-thumb:hover {
+  background: #4a4a48;
+}

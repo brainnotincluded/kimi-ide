@@ -1,0 +1,29 @@
+{
+  "name": "@ide-traitor/languages-core",
+  "version": "1.0.0",
+  "description": "Language Support System core for IDE Traitor",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "ide",
+    "language-server",
+    "lsp",
+    "typescript",
+    "editor"
+  ],
+  "author": "IDE Traitor Team",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

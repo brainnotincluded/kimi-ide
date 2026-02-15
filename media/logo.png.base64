@@ -1,0 +1,45 @@
+# Logo PNG Base64 Placeholder
+
+This file contains instructions for generating the logo.png file.
+
+## Logo Specifications
+
+- **Size**: 400x120 pixels (or larger for retina)
+- **Format**: PNG with transparency
+- **Purpose**: README and documentation
+
+## Conversion Options
+
+### Using Node.js and sharp
+
+```bash
+npm install -g sharp-cli
+sharp -i logo.svg -o logo.png resize 800 240
+```
+
+### Using ImageMagick
+
+```bash
+convert -background none logo.svg -resize 800x240 logo.png
+```
+
+### Using Inkscape
+
+```bash
+inkscape logo.svg --export-filename=logo.png -w 800 -h 240
+```
+
+### Using online converters
+
+- https://convertio.co/svg-png/
+- https://cloudconvert.com/svg-to-png
+
+## Alternative: Use SVG directly in README
+
+You can reference the SVG directly in README.md:
+
+```markdown
+<img src="media/logo.svg" alt="Kimi IDE" width="400">
+```
+
+This works on GitHub and most markdown renderers.

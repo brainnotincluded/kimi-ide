@@ -1,0 +1,48 @@
+could not create image from display
+could not create image from display
+could not create image from display
+🚀 Starting Kimi IDE debug session...
+==================================================
+
+🟢 Starting Electron...
+PID: 26403
+📸 Screenshot saved: debug_screenshots/03s_startup_021308.png
+
+📝 Console output:
+
+> kimi-ide@0.1.0 start
+> electron .
+
+
+📸 Screenshot saved: debug_screenshots/08s_loading_021313.png
+
+📝 Console output:
+
+> kimi-ide@0.1.0 start
+> electron .
+
+
+📸 Screenshot saved: debug_screenshots/13s_loaded_021318.png
+
+📝 Console output:
+
+> kimi-ide@0.1.0 start
+> electron .
+
+
+
+📁 Checking dist files:
+✅ dist/main.js: 9220 bytes
+✅ dist/renderer.js: 141328 bytes
+✅ dist/index.html: 539 bytes
+
+📄 Checking index.html:
+✅ Script tag found in HTML
+✅ renderer.js referenced
+📸 Screenshot saved: debug_screenshots/18s_final_021323.png
+
+🔴 Killing Electron...
+
+✅ Debug session complete!
+📸 Screenshots saved in: debug_screenshots/
+📝 Console log: electron_console.log

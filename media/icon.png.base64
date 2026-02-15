@@ -1,0 +1,40 @@
+# Icon PNG Base64 Placeholder
+
+This file contains instructions for generating the icon.png file.
+
+## Option 1: Convert SVG to PNG using online tools
+
+1. Open https://convertio.co/svg-png/ or https://cloudconvert.com/svg-to-png
+2. Upload icon.svg
+3. Download 128x128 PNG
+4. Save as media/icon.png
+
+## Option 2: Using Node.js and sharp
+
+```bash
+npm install -g sharp-cli
+sharp -i icon.svg -o icon.png resize 128 128
+```
+
+## Option 3: Using ImageMagick
+
+```bash
+convert -background none icon.svg -resize 128x128 icon.png
+```
+
+## Option 4: Using Inkscape
+
+```bash
+inkscape icon.svg --export-filename=icon.png -w 128 -h 128
+```
+
+## Required Sizes
+
+VS Code extensions typically need icons at these sizes:
+- 16x16 - Activity bar
+- 24x24 - Commands
+- 48x48 - Extension view
+- 128x128 - Marketplace
+- 256x256 - High DPI displays
+
+The main icon.png should be at least 128x128.
