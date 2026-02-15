@@ -59,6 +59,29 @@ export {
     type InsertOptions,
 } from './editorUtils';
 
+// Code Utils
+export {
+    extractImports,
+    getIndentation,
+    detectIndentation,
+    normalizeIndentation,
+    isComment,
+    isEmptyOrWhitespace,
+    countLines,
+    truncateCode,
+    escapeRegExp,
+    camelToSnake,
+    snakeToCamel,
+    kebabToCamel,
+    camelToKebab,
+    extractFunctions,
+    getContext,
+    findBracePairs,
+    isValidSyntax,
+    getComplexityScore,
+    formatCodeSnippet,
+} from './codeUtils';
+
 // Markdown Utils
 export {
     extractCodeBlocks,

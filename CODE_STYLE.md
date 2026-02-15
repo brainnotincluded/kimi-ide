@@ -1,25 +1,32 @@
 # Code Style Guide
 
-This document defines the coding standards for Traitor IDE. All contributions must follow these guidelines.
+This document defines the coding standards for Kimi IDE. All contributions must follow these guidelines.
+
+---
 
 ## Table of Contents
 
 - [General Principles](#general-principles)
 - [TypeScript Style Guide](#typescript-style-guide)
 - [React Style Guide](#react-style-guide)
-- [Electron Specifics](#electron-specifics)
+- [VS Code Extension Guidelines](#vs-code-extension-guidelines)
 - [File Organization](#file-organization)
 - [Naming Conventions](#naming-conventions)
 - [Formatting Rules](#formatting-rules)
 - [Documentation Standards](#documentation-standards)
+- [ESLint Configuration](#eslint-configuration)
+
+---
 
 ## General Principles
 
-1. **Readability over cleverness**: Code is read more often than written
-2. **Explicit over implicit**: Make types and intentions clear
-3. **DRY (Don't Repeat Yourself)**: Extract reusable logic
-4. **Single Responsibility**: Each function/component does one thing well
-5. **Fail fast**: Validate inputs early and throw meaningful errors
+1. **Readability over cleverness** - Code is read more often than written
+2. **Explicit over implicit** - Make types and intentions clear
+3. **DRY (Don't Repeat Yourself)** - Extract reusable logic
+4. **Single Responsibility** - Each function/component does one thing well
+5. **Fail fast** - Validate inputs early and throw meaningful errors
+
+---
 
 ## TypeScript Style Guide
 
@@ -33,15 +40,17 @@ Always enable strict mode in `tsconfig.json`:
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
-    "strictFunctionTypes": true
+    "strictFunctionTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
   }
 }
 ```
 
 ### Type Definitions
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Explicit, descriptive types
 interface FileNode {
   name: string;
   path: string;
@@ -57,8 +66,10 @@ interface FileSystemError extends Error {
   code: string;
   path: string;
 }
+```
 
-// ❌ BAD: Vague types, missing documentation
+❌ **Bad:**
+```typescript
 type Node = any;
 interface File {
   name: string;
@@ -68,8 +79,8 @@ interface File {
 
 ### Functions
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Clear signature, JSDoc, early returns
 /**
  * Reads file content from the filesystem
  * @param filePath - Absolute path to the file
@@ -91,8 +102,10 @@ async function readFileContent(
   
   return fs.promises.readFile(filePath, encoding);
 }
+```
 
-// ❌ BAD: Implicit types, no validation
+❌ **Bad:**
+```typescript
 function readFile(path) {
   return fs.readFileSync(path);
 }
@@ -100,8 +113,9 @@ function readFile(path) {
 
 ### Interface vs Type
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Use interface for object shapes that may be extended
+// Use interface for object shapes that may be extended
 interface ComponentProps {
   id: string;
   children: React.ReactNode;
@@ -112,7 +126,7 @@ interface EditorProps extends ComponentProps {
   content: string;
 }
 
-// ✅ GOOD: Use type for unions, tuples, or mapped types
+// Use type for unions, tuples, or mapped types
 type Theme = 'light' | 'dark' | 'system';
 type EventHandler<T> = (event: T) => void;
 type FileMap = Record<string, FileNode>;
@@ -120,8 +134,9 @@ type FileMap = Record<string, FileNode>;
 
 ### Enums
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Use const enums or string literal unions
+// Use const enums or string literal unions
 const enum IPCChannel {
   FILE_READ = 'file:read',
   FILE_WRITE = 'file:write',
@@ -133,8 +148,11 @@ type IPCChannel =
   | 'file:read' 
   | 'file:write' 
   | 'dialog:open';
+```
 
-// ❌ BAD: Regular enums (adds runtime overhead)
+❌ **Bad:**
+```typescript
+// Regular enums add runtime overhead
 enum Channel {
   FileRead,
   FileWrite
@@ -143,12 +161,13 @@ enum Channel {
 
 ### Null Handling
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Use optional chaining and nullish coalescing
+// Use optional chaining and nullish coalescing
 const fileName = file?.name ?? 'untitled';
 const size = stats?.size ?? 0;
 
-// ✅ GOOD: Type guards for null checks
+// Type guards for null checks
 function processNode(node: FileNode | null): void {
   if (!node) {
     return;
@@ -157,17 +176,22 @@ function processNode(node: FileNode | null): void {
   // TypeScript knows node is not null here
   console.log(node.name);
 }
-
-// ❌ BAD: Non-null assertions (except when absolutely necessary)
-const name = node!.name; // Avoid this
 ```
+
+❌ **Bad:**
+```typescript
+// Non-null assertions (avoid when possible)
+const name = node!.name;
+```
+
+---
 
 ## React Style Guide
 
 ### Component Structure
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Functional component with explicit props
 import React, { useCallback, useMemo, useState } from 'react';
 
 interface SidebarProps {
@@ -211,8 +235,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
 ### Hooks Rules
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Hooks at top level, descriptive names
 function useFileSystem(workspace: string | null) {
   const [files, setFiles] = useState<FileNode[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -233,10 +257,12 @@ function useFileSystem(workspace: string | null) {
   
   return { files, isLoading, error };
 }
+```
 
-// ❌ BAD: Conditional hooks, vague names
+❌ **Bad:**
+```typescript
 function useData() {
-  const [data, setData] = useState([]); // Vague
+  const [data, setData] = useState([]); // Vague type
   
   if (condition) { // ❌ Hook rule violation!
     useEffect(() => {}, []);
@@ -248,8 +274,8 @@ function useData() {
 
 ### Event Handlers
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Memoized handlers, descriptive names
 const Editor: React.FC<EditorProps> = ({ onChange, onSave }) => {
   const handleContentChange = useCallback((value: string) => {
     onChange(value);
@@ -270,131 +296,81 @@ const Editor: React.FC<EditorProps> = ({ onChange, onSave }) => {
   return <MonacoEditor onChange={handleContentChange} />;
 };
 
-// ❌ BAD: Inline arrow functions (creates new function each render)
-<button onClick={() => doSomething()}>Click</button>
-
-// ✅ GOOD: Stable reference
+// ✅ Stable reference
 <button onClick={handleClick}>Click</button>
 ```
 
-### Conditional Rendering
-
+❌ **Bad:**
 ```typescript
-// ✅ GOOD: Early returns, clear conditions
-function StatusMessage({ status, error }: StatusProps) {
-  if (error) {
-    return <ErrorMessage error={error} />;
-  }
-  
-  if (status === 'loading') {
-    return <LoadingSpinner />;
-  }
-  
-  if (status === 'success') {
-    return <SuccessMessage />;
-  }
-  
-  return null;
-}
-
-// ✅ GOOD: Object map for multiple states
-const StatusComponent = {
-  loading: LoadingSpinner,
-  success: SuccessMessage,
-  error: ErrorMessage,
-};
-
-function Status({ status }: { status: keyof typeof StatusComponent }) {
-  const Component = StatusComponent[status];
-  return <Component />;
-}
+// ❌ Inline functions create new function each render
+<button onClick={() => doSomething()}>Click</button>
 ```
 
-## Electron Specifics
+---
 
-### IPC Communication
+## VS Code Extension Guidelines
 
+### Command Registration
+
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Typed IPC channels
-// types/ipc.ts
-export interface IPCChannels {
-  'file:read': {
-    request: { path: string; encoding?: BufferEncoding };
-    response: string;
-    error: FileSystemError;
-  };
-  'file:write': {
-    request: { path: string; content: string };
-    response: { success: boolean };
-    error: FileSystemError;
-  };
-}
-
-// main/ipc.ts
-ipcMain.handle('file:read', async (event, { path, encoding }) => {
-  try {
-    const content = await fs.readFile(path, encoding);
-    return content;
-  } catch (error) {
-    throw new FileSystemError(`Failed to read file: ${error.message}`);
-  }
-});
-
-// renderer/fileService.ts
-export async function readFile(path: string): Promise<string> {
-  return ipcRenderer.invoke('file:read', { path });
+export function activate(context: vscode.ExtensionContext) {
+  // Register command with proper error handling
+  const disposable = vscode.commands.registerCommand(
+    'kimi.inlineEdit',
+    async () => {
+      try {
+        await inlineEditService.open();
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          `Failed to open inline edit: ${error.message}`
+        );
+        logger.error('Inline edit failed', error);
+      }
+    }
+  );
+  
+  context.subscriptions.push(disposable);
 }
 ```
 
-### Security
+### WebView Usage
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Validate all IPC inputs
-ipcMain.handle('file:write', async (event, { path, content }) => {
-  // Validate path is within workspace
-  const resolvedPath = path.resolve(path);
-  const workspaceRoot = getWorkspaceRoot();
-  
-  if (!resolvedPath.startsWith(workspaceRoot)) {
-    throw new Error('Path outside workspace');
+const panel = vscode.window.createWebviewPanel(
+  'kimiChat',
+  'Kimi Chat',
+  vscode.ViewColumn.Beside,
+  {
+    enableScripts: true,
+    retainContextWhenHidden: true,
+    localResourceRoots: [
+      vscode.Uri.joinPath(context.extensionUri, 'media')
+    ]
   }
-  
-  // Validate content type
-  if (typeof content !== 'string') {
-    throw new Error('Content must be a string');
-  }
-  
-  await fs.writeFile(resolvedPath, content);
-});
+);
+```
 
-// ❌ BAD: Direct execution of user input
-ipcMain.handle('run:command', (event, command) => {
-  exec(command); // ❌ Security vulnerability!
+### Configuration
+
+✅ **Good:**
+```typescript
+// Get configuration with defaults
+const config = vscode.workspace.getConfiguration('kimi');
+const apiKey = config.get<string>('apiKey', '');
+const maxTokens = config.get<number>('context.maxTokens', 8000);
+
+// Listen for changes
+vscode.workspace.onDidChangeConfiguration(e => {
+  if (e.affectsConfiguration('kimi')) {
+    // Reload config
+    reloadConfiguration();
+  }
 });
 ```
 
-### Memory Management
-
-```typescript
-// ✅ GOOD: Cleanup event listeners
-useEffect(() => {
-  const handler = (event: IpcRendererEvent, data: unknown) => {
-    processData(data);
-  };
-  
-  ipcRenderer.on('update', handler);
-  
-  return () => {
-    ipcRenderer.off('update', handler);
-  };
-}, []);
-
-// ✅ GOOD: Destroy browser windows properly
-const window = new BrowserWindow({...});
-window.on('closed', () => {
-  // Cleanup
-});
-```
+---
 
 ## File Organization
 
@@ -402,85 +378,77 @@ window.on('closed', () => {
 
 ```
 src/
-├── main/                    # Electron main process
-│   ├── main.ts             # Entry point
-│   ├── ipc/                # IPC handlers
-│   │   ├── fileHandlers.ts
-│   │   └── windowHandlers.ts
-│   └── utils/              # Main process utilities
-│       └── fileUtils.ts
-├── renderer/               # React renderer process
-│   ├── components/         # React components
-│   │   ├── common/        # Shared components
-│   │   ├── editor/
-│   │   ├── sidebar/
-│   │   └── terminal/
-│   ├── hooks/             # Custom React hooks
-│   ├── services/          # API/IPC services
-│   ├── utils/             # Utility functions
-│   └── styles/            # Global styles
-├── shared/                # Shared between main/renderer
-│   ├── types/             # TypeScript types
-│   └── constants.ts       # Shared constants
-└── types/                 # Global type declarations
+├── agents/                    # Multi-Agent System
+│   ├── __tests__/            # Unit tests
+│   ├── orchestrator.ts
+│   └── ...
+├── discovery/                 # Tree-based Discovery
+├── editing/                   # Parallel Editing
+├── review/                    # Auto Code Review
+├── context/                   # Smart Context
+├── kimi/                      # Wire Protocol
+├── panels/                    # UI Panels
+├── providers/                 # VS Code Providers
+├── commands/                  # Command handlers
+├── utils/                     # Utilities
+├── types/                     # Global types
+└── extension.ts               # Entry point
 ```
 
 ### File Naming
 
-```typescript
-// Components: PascalCase.tsx
-// Sidebar.tsx, EditorPanel.tsx, TerminalView.tsx
+| Category | Convention | Example |
+|----------|-----------|---------|
+| Components | PascalCase.tsx | `Sidebar.tsx` |
+| Hooks | camelCase with `use` | `useFileSystem.ts` |
+| Utilities | camelCase | `fileUtils.ts` |
+| Constants | camelCase or UPPER_SNAKE | `constants.ts` |
+| Types | PascalCase | `types.ts` |
+| Tests | `*.test.ts` | `orchestrator.test.ts` |
 
-// Hooks: camelCase starting with 'use'
-// useFileSystem.ts, useTheme.ts, useDebounce.ts
-
-// Utilities: camelCase
-// fileUtils.ts, pathHelpers.ts, formatters.ts
-
-// Constants: UPPER_SNAKE_CASE or camelCase
-// constants.ts, ipcChannels.ts
-
-// Styles: Same name as component
-// Sidebar.tsx + Sidebar.css
-```
+---
 
 ## Naming Conventions
 
 ### Variables
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Descriptive, camelCase
 const fileExplorerWidth = 260;
 const isLoading = false;
 const activeEditorId: string | null = null;
 const MAX_RECENT_FILES = 10;
+```
 
-// ❌ BAD: Abbreviations, unclear names
-const w = 260;
-const loading = false;
-const id = null;
-const max = 10;
+❌ **Bad:**
+```typescript
+const w = 260;           // Too short
+const loading = false;   // Not descriptive
+const id = null;         // Missing type
+const max = 10;          // Ambiguous
 ```
 
 ### Functions
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Verb + noun, clear intent
 function getFileContent(path: string): Promise<string>
 function handleFileSelect(path: string): void
 function isValidFilePath(path: string): boolean
 function formatFileSize(bytes: number): string
+```
 
-// ❌ BAD: Vague names
-function getContent(p: string)
-function process(x: string)
-function check(s: string)
+❌ **Bad:**
+```typescript
+function getContent(p: string)  // Vague name, short param
+function process(x: string)     // Non-descriptive
+function check(s: string)       // Unclear purpose
 ```
 
 ### Classes
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Nouns, PascalCase
 class FileSystemManager {
   private workspaceRoot: string;
   
@@ -492,19 +460,24 @@ class FileSystemManager {
     // Implementation
   }
 }
+```
 
-// ❌ BAD: Verbs, unclear responsibility
+❌ **Bad:**
+```typescript
+// Unclear responsibility
 class ProcessFile {
   // What does this do?
 }
 ```
 
+---
+
 ## Formatting Rules
 
 ### Indentation & Spacing
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: 2 spaces, consistent spacing
 interface Example {
   name: string;
   value: number;
@@ -517,8 +490,10 @@ function process(
   const result = arg1 + String(arg2);
   return Promise.resolve(result);
 }
+```
 
-// ❌ BAD: Inconsistent spacing
+❌ **Bad:**
+```typescript
 function process(arg1:string,arg2:number):Promise<string>{
   const result=arg1+String(arg2);
   return Promise.resolve(result);
@@ -527,12 +502,13 @@ function process(arg1:string,arg2:number):Promise<string>{
 
 ### Quotes
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Single quotes for strings
+// Single quotes for strings
 const message = 'Hello, World!';
 const template = `Value: ${value}`;
 
-// ✅ GOOD: Double quotes for JSX attributes
+// Double quotes for JSX attributes
 <input type="text" placeholder="Enter name" />
 ```
 
@@ -540,24 +516,26 @@ const template = `Value: ${value}`;
 
 Always use semicolons:
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD
 const x = 5;
 const y = 10;
 
 function foo(): void {
   return;
 }
+```
 
-// ❌ BAD
+❌ **Bad:**
+```typescript
 const x = 5
 const y = 10
 ```
 
 ### Trailing Commas
 
+✅ **Good:**
 ```typescript
-// ✅ GOOD: Trailing commas in multi-line
 const config = {
   port: 3000,
   host: 'localhost',
@@ -569,18 +547,23 @@ const items = [
   'two',
   'three',
 ];
+```
 
-// ❌ BAD: Missing trailing comma
+❌ **Bad:**
+```typescript
 const config = {
   port: 3000,
-  host: 'localhost'
+  host: 'localhost'  // Missing trailing comma
 };
 ```
+
+---
 
 ## Documentation Standards
 
 ### JSDoc Comments
 
+✅ **Good:**
 ```typescript
 /**
  * Represents a file in the workspace
@@ -629,26 +612,49 @@ Each module should have a README explaining:
 - Usage examples
 - Dependencies
 
+---
+
 ## ESLint Configuration
 
 ```javascript
-// .eslintrc.js
-module.exports = {
-  parser: '@typescript-eslint/parser',
-  extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:react/recommended',
-    'plugin:react-hooks/recommended',
+// .eslintrc.json
+{
+  "parser": "@typescript-eslint/parser",
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended"
   ],
-  rules: {
-    '@typescript-eslint/explicit-function-return-type': 'error',
-    '@typescript-eslint/no-explicit-any': 'error',
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    'react/prop-types': 'off',
-    'react/react-in-jsx-scope': 'off',
+  "rules": {
+    "@typescript-eslint/explicit-function-return-type": "error",
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/prefer-nullish-coalescing": "error",
+    "@typescript-eslint/prefer-optional-chain": "error",
+    "react/prop-types": "off",
+    "react/react-in-jsx-scope": "off",
+    "no-console": ["warn", { "allow": ["error", "warn"] }]
   },
-};
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}
+```
+
+### Running Linting
+
+```bash
+# Check code
+npm run lint
+
+# Fix auto-fixable issues
+npm run lint:fix
+
+# Format with Prettier
+npm run format
 ```
 
 ---

@@ -5,36 +5,83 @@ All notable changes to Kimi IDE will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+---
+
 ## [Unreleased]
 
 ### Added
-- Initial release of Kimi IDE
-- Electron-based desktop application architecture
-- Monaco Editor integration for syntax highlighting
-- File explorer with directory tree navigation
-- Integrated terminal with PTY support
-- Problems, Output, and Debug Console panels
-- Resizable panels with drag handles
-- TypeScript support throughout
-- IPC communication between main and renderer processes
-- Build system with Webpack
-- CI/CD pipeline with GitHub Actions
-- Comprehensive documentation (CONTRIBUTING, CODE_STYLE, ARCHITECTURE)
+- Comprehensive documentation consolidation
+- New troubleshooting guide
+- Improved code review guidelines with automated tools
+- Architecture documentation with detailed diagrams
 
-### Security
-- Input validation on all IPC handlers
-- Path traversal prevention
-- Type-safe IPC communication
+### Changed
+- Consolidated all README files into single comprehensive README.md
+- Standardized documentation format across all files
+- Improved navigation with consistent table of contents
 
-## [0.1.0] - 2024-02-16
+### Removed
+- Duplicate documentation files
+- Outdated temporary files
+
+---
+
+## [2.0.0] - 2026-02-15
 
 ### Added
-- First stable release
-- Core editor functionality
-- File operations (read, write, directory navigation)
+- Multi-Agent System with 6 specialized agents
+- Tree-based File Discovery with AST analysis
+- Parallel Multi-Strategy Editing (5 strategies)
+- Automatic Code Review with 5 reviewers
+- Smart Context Management with relevance scoring
+- Wire Protocol for CLI integration
 - Terminal integration
-- Basic UI layout
+- LSP completion provider
+- Comprehensive test suite
+
+### Changed
+- Improved context resolution accuracy
+- Enhanced prompt building
+- Better error handling and recovery
+
+### Security
+- Input validation on all handlers
+- Path traversal prevention
+- Type-safe IPC communication
+- Secure API key storage
+
+---
+
+## [1.5.0] - 2025-08-20
+
+### Added
+- Improved context resolution
+- Symbol provider
+- Better prompt templates
+- Configuration options
+
+### Changed
+- Refactored context management
+- Improved error messages
+
+### Fixed
+- Memory leaks in file watching
+- Race conditions in async operations
+
+---
+
+## [1.0.0] - 2025-01-15
+
+### Added
+- Initial release of Kimi IDE
+- VS Code extension architecture
+- Basic chat functionality
+- Inline editing (Cmd+K)
+- Code actions (Explain, Fix, Optimize)
+- File explorer integration
+- Monaco Editor integration
 - Settings persistence
+- GitHub Actions CI/CD
 
 ---
 
@@ -64,4 +111,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-For the complete list of commits, see the [commit history](https://github.com/your-username/kimi-ide/commits/main).
+For the complete list of commits, see the [commit history](https://github.com/kimi-ai/kimi-ide/commits/main).

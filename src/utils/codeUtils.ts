@@ -1,7 +1,34 @@
-import * as vscode from 'vscode';
+/**
+ * Code utility functions for Kimi IDE
+ * Handles code analysis, manipulation, and formatting
+ */
+
+import { logger } from './logger';
 
 /**
- * Get the indentation of a line
+ * Extract import statements from code
+ */
+export function extractImports(code: string): string[] {
+    const imports: string[] = [];
+    const lines = code.split('\n');
+    
+    for (const line of lines) {
+        const trimmed = line.trim();
+        // Match ES6 imports
+        if (trimmed.startsWith('import ')) {
+            imports.push(trimmed);
+        }
+        // Match CommonJS requires
+        else if (trimmed.match(/^const\s+.*?=\s+require\(/)) {
+            imports.push(trimmed);
+        }
+    }
+    
+    return imports;
+}
+
+/**
+ * Get the leading whitespace (indentation) of a line
  */
 export function getIndentation(line: string): string {
     const match = line.match(/^(\s*)/);
@@ -9,63 +36,35 @@ export function getIndentation(line: string): string {
 }
 
 /**
- * Detect the indentation style of a document
+ * Detect the indentation style used in code
  */
-export function detectIndentation(document: vscode.TextDocument): {
-    style: 'tabs' | 'spaces';
-    size: number;
-} {
-    let spacesCount = 0;
-    let tabsCount = 0;
-    const indentSizes: number[] = [];
-
-    for (let i = 0; i < Math.min(document.lineCount, 100); i++) {
-        const line = document.lineAt(i).text;
-        if (line.trim().length === 0) continue;
-
-        const match = line.match(/^(\s*)/);
-        if (match && match[1].length > 0) {
-            const indent = match[1];
-            if (indent.includes('\t')) {
-                tabsCount++;
-            } else {
-                spacesCount++;
-                indentSizes.push(indent.length);
-            }
+export function detectIndentation(code: string): { type: 'spaces' | 'tabs'; indent: string; size: number } {
+    const lines = code.split('\n');
+    const indentCounts: Map<string, number> = new Map();
+    
+    for (const line of lines) {
+        const indent = getIndentation(line);
+        if (indent) {
+            indentCounts.set(indent, (indentCounts.get(indent) || 0) + 1);
         }
     }
-
-    if (tabsCount > spacesCount) {
-        return { style: 'tabs', size: 1 };
-    }
-
-    // Calculate most common space indentation
-    if (indentSizes.length > 0) {
-        const size = mode(indentSizes);
-        return { style: 'spaces', size: size || 4 };
-    }
-
-    return { style: 'spaces', size: 4 };
-}
-
-/**
- * Calculate mode of an array
- */
-function mode(numbers: number[]): number {
-    const counts = new Map<number, number>();
+    
+    // Find most common indent
+    let mostCommon = '';
     let maxCount = 0;
-    let maxNum = numbers[0];
-
-    for (const num of numbers) {
-        const count = (counts.get(num) || 0) + 1;
-        counts.set(num, count);
+    for (const [indent, count] of indentCounts) {
         if (count > maxCount) {
+            mostCommon = indent;
             maxCount = count;
-            maxNum = num;
         }
     }
-
-    return maxNum;
+    
+    if (mostCommon.includes('\t')) {
+        return { type: 'tabs', indent: '\t', size: mostCommon.length };
+    }
+    
+    const spaceCount = mostCommon.length || 4;
+    return { type: 'spaces', indent: ' '.repeat(spaceCount), size: spaceCount };
 }
 
 /**
@@ -73,225 +72,268 @@ function mode(numbers: number[]): number {
  */
 export function normalizeIndentation(
     code: string,
-    targetIndent: string,
-    currentIndent?: string
+    targetType: 'spaces' | 'tabs',
+    targetSize: number = 4
 ): string {
-    const lines = code.split('\n');
-    
-    if (!currentIndent) {
-        // Detect current indentation from first non-empty line
-        for (const line of lines) {
-            if (line.trim().length > 0) {
-                currentIndent = getIndentation(line);
-                break;
-            }
-        }
-    }
-
-    if (!currentIndent || currentIndent === targetIndent) {
+    const detected = detectIndentation(code);
+    if (detected.type === targetType && detected.size === targetSize) {
         return code;
     }
-
-    return lines
-        .map((line) => {
-            if (line.startsWith(currentIndent!)) {
-                return targetIndent + line.slice(currentIndent!.length);
-            }
-            return line;
-        })
-        .join('\n');
-}
-
-/**
- * Get surrounding context of a range
- */
-export function getSurroundingContext(
-    document: vscode.TextDocument,
-    range: vscode.Range,
-    linesBefore: number = 10,
-    linesAfter: number = 10
-): { before: string; after: string; fullRange: vscode.Range } {
-    const contextStartLine = Math.max(0, range.start.line - linesBefore);
-    const contextEndLine = Math.min(
-        document.lineCount - 1,
-        range.end.line + linesAfter
-    );
-
-    const beforeRange = new vscode.Range(
-        new vscode.Position(contextStartLine, 0),
-        new vscode.Position(range.start.line, 0)
-    );
-
-    const afterRange = new vscode.Range(
-        new vscode.Position(range.end.line + 1, 0),
-        new vscode.Position(
-            contextEndLine,
-            document.lineAt(contextEndLine).text.length
-        )
-    );
-
-    return {
-        before: document.getText(beforeRange),
-        after: document.getText(afterRange),
-        fullRange: new vscode.Range(
-            new vscode.Position(contextStartLine, 0),
-            new vscode.Position(
-                contextEndLine,
-                document.lineAt(contextEndLine).text.length
-            )
-        ),
-    };
-}
-
-/**
- * Extract the most relevant section of code for context
- */
-export function extractRelevantContext(
-    document: vscode.TextDocument,
-    range: vscode.Range,
-    maxChars: number = 2000
-): string {
-    const fullText = document.getText();
-    const selectedText = document.getText(range);
     
-    if (fullText.length <= maxChars) {
-        return fullText;
-    }
-
-    // Try to get surrounding context
-    const charsBefore = Math.floor((maxChars - selectedText.length) / 2);
-    const startOffset = Math.max(0, document.offsetAt(range.start) - charsBefore);
-    const endOffset = Math.min(
-        fullText.length,
-        document.offsetAt(range.end) + charsBefore
-    );
-
-    let context = fullText.slice(startOffset, endOffset);
-
-    // Add ellipsis if truncated
-    if (startOffset > 0) {
-        context = '// ... (truncated)\n' + context;
-    }
-    if (endOffset < fullText.length) {
-        context = context + '\n// ... (truncated)';
-    }
-
-    return context;
-}
-
-/**
- * Check if code is likely incomplete
- */
-export function isIncompleteCode(code: string): boolean {
-    const openBraces = (code.match(/{/g) || []).length;
-    const closeBraces = (code.match(/}/g) || []).length;
-    const openParens = (code.match(/\(/g) || []).length;
-    const closeParens = (code.match(/\)/g) || []).length;
-    const openBrackets = (code.match(/\[/g) || []).length;
-    const closeBrackets = (code.match(/\]/g) || []).length;
-
-    return (
-        openBraces !== closeBraces ||
-        openParens !== closeParens ||
-        openBrackets !== closeBrackets
-    );
-}
-
-/**
- * Format language ID for display
- */
-export function formatLanguageName(languageId: string): string {
-    const languageNames: Record<string, string> = {
-        typescript: 'TypeScript',
-        javascript: 'JavaScript',
-        python: 'Python',
-        java: 'Java',
-        cpp: 'C++',
-        csharp: 'C#',
-        go: 'Go',
-        rust: 'Rust',
-        ruby: 'Ruby',
-        php: 'PHP',
-        swift: 'Swift',
-        kotlin: 'Kotlin',
-        scala: 'Scala',
-        r: 'R',
-        matlab: 'MATLAB',
-        sql: 'SQL',
-        html: 'HTML',
-        css: 'CSS',
-        scss: 'SCSS',
-        sass: 'Sass',
-        less: 'Less',
-        json: 'JSON',
-        yaml: 'YAML',
-        xml: 'XML',
-        markdown: 'Markdown',
-    };
-
-    return languageNames[languageId] || languageId.toUpperCase();
-}
-
-/**
- * Clean up markdown code blocks from AI response
- */
-export function extractCodeFromMarkdown(content: string): string {
-    // Check for fenced code blocks
-    const fencedMatch = content.match(/```[\w]*\n?([\s\S]*?)```/);
-    if (fencedMatch) {
-        return fencedMatch[1].trim();
-    }
-
-    // Check for inline code
-    if (content.startsWith('`') && content.endsWith('`')) {
-        return content.slice(1, -1).trim();
-    }
-
-    return content.trim();
-}
-
-/**
- * Generate a diff between two texts
- */
-export function generateDiff(
-    original: string,
-    modified: string,
-    contextLines: number = 3
-): string {
-    const originalLines = original.split('\n');
-    const modifiedLines = modified.split('\n');
-    
-    const result: string[] = [];
-    result.push('--- Original');
-    result.push('+++ Modified');
-    result.push('');
-
-    let oldLine = 1;
-    let newLine = 1;
-
-    const maxLen = Math.max(originalLines.length, modifiedLines.length);
-    
-    for (let i = 0; i < maxLen; i++) {
-        const orig = originalLines[i];
-        const mod = modifiedLines[i];
-
-        if (i >= originalLines.length) {
-            result.push(`+${mod}`);
-            newLine++;
-        } else if (i >= modifiedLines.length) {
-            result.push(`-${orig}`);
-            oldLine++;
-        } else if (orig !== mod) {
-            result.push(`-${orig}`);
-            result.push(`+${mod}`);
-            oldLine++;
-            newLine++;
+    const lines = code.split('\n');
+    const normalized = lines.map(line => {
+        const currentIndent = getIndentation(line);
+        if (!currentIndent) return line;
+        
+        // Convert to spaces first
+        let spaces = currentIndent;
+        if (detected.type === 'tabs') {
+            spaces = currentIndent.replace(/\t/g, ' '.repeat(detected.size));
+        }
+        
+        // Calculate indent level
+        const indentLevel = Math.floor(spaces.length / detected.size);
+        
+        // Convert to target
+        if (targetType === 'tabs') {
+            return '\t'.repeat(indentLevel) + line.trimStart();
         } else {
-            result.push(` ${orig}`);
-            oldLine++;
-            newLine++;
+            return ' '.repeat(indentLevel * targetSize) + line.trimStart();
+        }
+    });
+    
+    return normalized.join('\n');
+}
+
+/**
+ * Check if a line is a comment
+ */
+export function isComment(line: string): boolean {
+    const trimmed = line.trim();
+    return trimmed.startsWith('//') || 
+           trimmed.startsWith('/*') || 
+           trimmed.startsWith('*') ||
+           trimmed.startsWith('#');
+}
+
+/**
+ * Check if a line is empty or whitespace only
+ */
+export function isEmptyOrWhitespace(line: string): boolean {
+    return line.trim().length === 0;
+}
+
+/**
+ * Count lines in code
+ */
+export function countLines(code: string): number {
+    if (code === '') return 1;
+    return code.split('\n').length;
+}
+
+/**
+ * Truncate code to maximum number of lines
+ */
+export function truncateCode(code: string, maxLines: number): string {
+    const lines = code.split('\n');
+    if (lines.length <= maxLines) {
+        return code;
+    }
+    
+    const half = Math.floor(maxLines / 2);
+    const first = lines.slice(0, half).join('\n');
+    const last = lines.slice(-half).join('\n');
+    
+    return `${first}\n// ... truncated ...\n${last}`;
+}
+
+/**
+ * Escape special regex characters
+ */
+export function escapeRegExp(string: string): string {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Convert camelCase to snake_case
+ */
+export function camelToSnake(str: string): string {
+    return str
+        .replace(/([A-Z])/g, '_$1')
+        .toLowerCase()
+        .replace(/^_/, '');
+}
+
+/**
+ * Convert snake_case to camelCase
+ */
+export function snakeToCamel(str: string): string {
+    return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+/**
+ * Convert kebab-case to camelCase
+ */
+export function kebabToCamel(str: string): string {
+    return str.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+/**
+ * Convert camelCase to kebab-case
+ */
+export function camelToKebab(str: string): string {
+    return str
+        .replace(/([A-Z])/g, '-$1')
+        .toLowerCase()
+        .replace(/^-/, '');
+}
+
+/**
+ * Extract function definitions from code
+ */
+export function extractFunctions(code: string): Array<{
+    name: string;
+    params: string[];
+    startLine: number;
+    endLine: number;
+}> {
+    const functions: Array<{ name: string; params: string[]; startLine: number; endLine: number }> = [];
+    const lines = code.split('\n');
+    
+    // Match function declarations, arrow functions, and methods
+    const functionRegex = /(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)/;
+    const arrowRegex = /(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?\(([^)]*)\)\s*=>/;
+    const methodRegex = /(?:async\s+)?(\w+)\s*\(([^)]*)\)\s*{/;
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        let match;
+        
+        if ((match = line.match(functionRegex)) || 
+            (match = line.match(arrowRegex)) ||
+            (match = line.match(methodRegex))) {
+            functions.push({
+                name: match[1],
+                params: match[2].split(',').map(p => p.trim()).filter(Boolean),
+                startLine: i,
+                endLine: i, // Would need proper brace matching for accurate end
+            });
         }
     }
+    
+    return functions;
+}
 
-    return result.join('\n');
+/**
+ * Get the context around a specific line
+ */
+export function getContext(
+    code: string,
+    targetLine: number,
+    contextLines: number = 5
+): string {
+    const lines = code.split('\n');
+    const start = Math.max(0, targetLine - contextLines);
+    const end = Math.min(lines.length, targetLine + contextLines + 1);
+    
+    return lines.slice(start, end).join('\n');
+}
+
+/**
+ * Find matching brace pairs
+ */
+export function findBracePairs(code: string): Array<{ open: number; close: number }> {
+    const pairs: Array<{ open: number; close: number }> = [];
+    const stack: number[] = [];
+    
+    for (let i = 0; i < code.length; i++) {
+        if (code[i] === '{') {
+            stack.push(i);
+        } else if (code[i] === '}') {
+            const open = stack.pop();
+            if (open !== undefined) {
+                pairs.push({ open, close: i });
+            }
+        }
+    }
+    
+    return pairs;
+}
+
+/**
+ * Check if code is valid TypeScript/JavaScript syntax
+ */
+export function isValidSyntax(code: string): boolean {
+    try {
+        // Basic syntax check - look for common errors
+        const bracePairs = findBracePairs(code);
+        const openBraces = (code.match(/{/g) || []).length;
+        const closeBraces = (code.match(/}/g) || []).length;
+        
+        if (openBraces !== closeBraces) {
+            return false;
+        }
+        
+        const openParens = (code.match(/\(/g) || []).length;
+        const closeParens = (code.match(/\)/g) || []).length;
+        
+        if (openParens !== closeParens) {
+            return false;
+        }
+        
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+/**
+ * Get the complexity score of a function
+ */
+export function getComplexityScore(code: string): number {
+    let score = 0;
+    
+    // Count control flow statements
+    const controlFlow = [
+        /\bif\b/g,
+        /\belse\s+if\b/g,
+        /\bfor\b/g,
+        /\bwhile\b/g,
+        /\bdo\b/g,
+        /\bswitch\b/g,
+        /\bcase\b/g,
+        /\bcatch\b/g,
+        /\?\s*[^:?]+\s*:/g, // ternary
+    ];
+    
+    for (const pattern of controlFlow) {
+        const matches = code.match(pattern);
+        if (matches) {
+            score += matches.length;
+        }
+    }
+    
+    // Count logical operators
+    const logicalOps = (code.match(/&&|\|\|/g) || []).length;
+    score += logicalOps;
+    
+    return score;
+}
+
+/**
+ * Format a code snippet for display
+ */
+export function formatCodeSnippet(code: string, maxLength: number = 100): string {
+    const lines = code.split('\n');
+    let formatted = lines.slice(0, 3).join('\n');
+    
+    if (lines.length > 3) {
+        formatted += `\n... (${lines.length - 3} more lines)`;
+    }
+    
+    if (formatted.length > maxLength) {
+        formatted = formatted.substring(0, maxLength - 3) + '...';
+    }
+    
+    return formatted;
 }

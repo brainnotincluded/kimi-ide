@@ -1,12 +1,12 @@
 # Kimi IDE Development Roadmap
 
-> **Current Version: 2.0.0** | **Last Updated: 2026-02-11**
+> **Current Version: 2.0.0** | **Last Updated: 2026-02-15**
 
 ---
 
 ## Overview
 
-This roadmap outlines the development trajectory for Kimi IDE, from initial concept to future innovations. Each phase builds upon the previous, creating a comprehensive AI-powered coding assistant.
+This roadmap outlines the development trajectory for Kimi IDE, from initial concept to future innovations.
 
 ---
 
@@ -118,7 +118,7 @@ This roadmap outlines the development trajectory for Kimi IDE, from initial conc
 
 ---
 
-## Phase 5: Codebuff-Inspired Innovations ✅ COMPLETE
+## Phase 5: Advanced Features ✅ COMPLETE
 
 **Timeline:** Q2 2025 - Q4 2025
 
@@ -152,7 +152,7 @@ This roadmap outlines the development trajectory for Kimi IDE, from initial conc
 - [x] Summary generation
 - [x] Priority-based selection
 
-**Milestone:** Feature parity with Codebuff + VS Code advantages
+**Milestone:** Feature parity with leading AI coding tools
 
 ---
 
@@ -312,7 +312,7 @@ This roadmap outlines the development trajectory for Kimi IDE, from initial conc
 | Phase 2 | ✅ Complete | Dec 2024 | Inline editing |
 | Phase 3 | ✅ Complete | Jan 2025 | Context system |
 | Phase 4 | ✅ Complete | Mar 2025 | Multi-agent system |
-| Phase 5 | ✅ Complete | Dec 2025 | Codebuff parity |
+| Phase 5 | ✅ Complete | Dec 2025 | Advanced features |
 | Phase 6 | 🚧 In Progress | Mar 2026 | Deep IDE integration |
 | Phase 7 | 🚧 In Progress | Jun 2026 | Enterprise scale |
 | Phase 8 | 📋 Planned | Sep 2026 | Learning system |
@@ -323,7 +323,7 @@ This roadmap outlines the development trajectory for Kimi IDE, from initial conc
 
 ## Version History
 
-### v2.0.0 (Current) - "Codebuff Evolution"
+### v2.0.0 (Current) - "Intelligent Assistant"
 - ✅ Multi-Agent System
 - ✅ Tree-based Discovery
 - ✅ Parallel Editing
@@ -347,7 +347,7 @@ This roadmap outlines the development trajectory for Kimi IDE, from initial conc
 We welcome community input! To propose features or changes:
 
 1. Open a GitHub issue with the `roadmap` label
-2. Join our Discord discussions
+2. Join our GitHub Discussions
 3. Submit a PR with your contribution
 
 ### Priority Guidelines

@@ -1,534 +1,585 @@
 # Contributing to Kimi IDE
 
-Thank you for your interest in contributing to Kimi IDE! This document provides guidelines for contributing to the project.
+Thank you for your interest in contributing to Kimi IDE! This document provides comprehensive guidelines and standards for contributing to the project.
+
+---
 
 ## Table of Contents
 
-- [Development Setup](#development-setup)
-- [Project Structure](#project-structure)
-- [Coding Style](#coding-style)
-- [Building the Project](#building-the-project)
-- [Running Tests](#running-tests)
-- [Making Changes](#making-changes)
-- [Submitting a Pull Request](#submitting-a-pull-request)
+- [Code of Conduct](#code-of-conduct)
+- [Getting Started](#getting-started)
+- [Development Environment](#development-environment)
+- [Development Workflow](#development-workflow)
+- [Coding Standards](#coding-standards)
+- [Testing Guidelines](#testing-guidelines)
+- [Commit Message Guidelines](#commit-message-guidelines)
+- [Pull Request Process](#pull-request-process)
+- [Code Review Process](#code-review-process)
 - [Release Process](#release-process)
+- [Getting Help](#getting-help)
 
-## Development Setup
+---
+
+## Code of Conduct
+
+This project and everyone participating in it is governed by our commitment to:
+
+- **Be respectful**: Treat everyone with respect. Healthy debate is encouraged, but harassment is not tolerated.
+- **Be constructive**: Provide constructive feedback and be open to receiving it.
+- **Be collaborative**: Work together towards the best possible solutions.
+- **Be professional**: Maintain professionalism in all interactions.
+
+---
+
+## Getting Started
 
 ### Prerequisites
 
-- **VS Code** 1.86.0 or higher
-- **Node.js** 18.x or higher
-- **npm** 9.x or higher
-- **Git**
-- **Make** (optional, for Makefile commands)
+| Requirement | Version | Purpose |
+|-------------|---------|---------|
+| VS Code | 1.86.0+ | Development environment |
+| Node.js | 18.x+ | Runtime |
+| npm | 9.x+ | Package manager |
+| Git | 2.x+ | Version control |
 
-### Initial Setup
+### Recommended Tools
+
+- **VS Code Extensions**:
+  - ESLint
+  - Prettier
+  - TypeScript Hero
+  - GitLens
+  - Jest Runner
+
+### Quick Setup
 
 ```bash
 # 1. Fork the repository on GitHub
 # 2. Clone your fork
-git clone https://github.com/YOUR_USERNAME/kimi-vscode.git
-cd kimi-vscode
+git clone https://github.com/YOUR_USERNAME/kimi-ide.git
+cd kimi-ide
 
 # 3. Install dependencies
 npm install
 
-# 4. Compile TypeScript
+# 4. Build the project
 npm run compile
 
-# 5. Open in VS Code
-code .
-```
-
-### Verify Setup
-
-```bash
-# Check TypeScript compilation
-npm run type-check
-
-# Run linting
-npm run lint
-
-# Run tests
-npm test
-```
-
-## Project Structure
-
-```
-kimi-vscode/
-├── src/
-│   ├── commands/          # VS Code commands
-│   ├── context/           # Context management
-│   ├── kimi/              # API and Wire Protocol
-│   ├── lsp/               # Language Server Protocol
-│   ├── panels/            # WebView panels
-│   ├── providers/         # VS Code providers
-│   ├── terminal/          # Terminal integration
-│   ├── test/              # Test files
-│   ├── types/             # Type definitions
-│   ├── utils/             # Utility functions
-│   ├── config.ts          # Configuration
-│   ├── extension.ts       # Entry point
-│   └── statusBar.ts       # Status bar
-├── docs/                  # Documentation
-├── resources/             # Icons and assets
-├── scripts/               # Build scripts
-├── package.json           # Extension manifest
-├── tsconfig.json          # TypeScript config
-└── Makefile               # Build automation
-```
-
-## Coding Style
-
-We use ESLint with TypeScript-specific rules. Configuration is in `.eslintrc.json`.
-
-### TypeScript Guidelines
-
-#### General
-
-- Use **TypeScript strict mode**
-- Prefer `interface` over `type` for object shapes
-- Use explicit return types for public functions
-- Avoid `any` - use `unknown` with type guards
-
-```typescript
-// ✅ Good
-interface Config {
-    apiKey: string;
-    model: string;
-}
-
-function getConfig(): Config {
-    return { apiKey: '', model: '' };
-}
-
-// ❌ Bad
-function getConfig(): any {
-    return {};
-}
-```
-
-#### Naming Conventions
-
-| Type | Convention | Example |
-|------|------------|---------|
-| Classes | PascalCase | `KimiApi`, `WireClient` |
-| Interfaces | PascalCase | `KimiConfig`, `WireMessage` |
-| Functions | camelCase | `getConfig()`, `sendMessage()` |
-| Variables | camelCase | `apiKey`, `isConnected` |
-| Constants | UPPER_SNAKE_CASE | `DEFAULT_TIMEOUT`, `CONFIG_SECTION` |
-| Enums | PascalCase | `WireEventType`, `StepType` |
-| Private members | _camelCase (prefix with _) | `_requestId`, `_process` |
-
-#### Code Organization
-
-```typescript
-// 1. Imports
-import * as vscode from 'vscode';
-import { EventEmitter } from 'events';
-
-// 2. Constants
-const DEFAULT_TIMEOUT = 30000;
-
-// 3. Types/Interfaces
-interface Options {
-    timeout: number;
-}
-
-// 4. Class Definition
-export class MyClass {
-    // 5. Private fields
-    private _timeout: number;
-    
-    // 6. Constructor
-    constructor(options: Options) {
-        this._timeout = options.timeout;
-    }
-    
-    // 7. Public methods
-    public async doSomething(): Promise<void> {
-        // Implementation
-    }
-    
-    // 8. Private methods
-    private _helper(): void {
-        // Implementation
-    }
-}
-```
-
-#### Error Handling
-
-```typescript
-// ✅ Good - Specific error handling
-try {
-    const result = await api.call();
-    return result;
-} catch (error) {
-    if (error instanceof NetworkError) {
-        showError('Network connection failed', error);
-        return null;
-    }
-    throw error; // Re-throw unexpected errors
-}
-
-// ✅ Good - With type guards
-function handleError(error: unknown): string {
-    if (error instanceof Error) {
-        return error.message;
-    }
-    return 'Unknown error';
-}
-```
-
-#### Async/Await
-
-```typescript
-// ✅ Good
-async function fetchData(): Promise<Data> {
-    const response = await api.get('/data');
-    return response.json();
-}
-
-// ❌ Bad - Mixed async styles
-function fetchData(): Promise<Data> {
-    return api.get('/data').then(r => r.json());
-}
-```
-
-### Formatting
-
-We don't enforce a specific formatter, but recommend:
-
-- 4 spaces indentation
-- 120 character line limit
-- Semicolons required
-- Single quotes for strings
-
-```bash
-# Optional: Format with Prettier
-npx prettier --write "src/**/*.ts"
-```
-
-## Building the Project
-
-### Development Build
-
-```bash
-# Watch mode - auto-recompile on changes
+# 5. Run in development mode
 npm run watch
-
-# Or using Make
-make dev
+# Then press F5 in VS Code to open Extension Development Host
 ```
 
-### Production Build
+---
+
+## Development Environment
+
+### VS Code Configuration
+
+Create `.vscode/settings.json`:
+
+```json
+{
+  "typescript.tsdk": "./node_modules/typescript/lib",
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.workingDirectories": ["."]
+}
+```
+
+### Launch Configuration
+
+The project includes `.vscode/launch.json` for debugging:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+      "outFiles": ["${workspaceFolder}/out/**/*.js"],
+      "preLaunchTask": "npm: watch"
+    }
+  ]
+}
+```
+
+### Environment Variables
+
+Create `.env` file for local development:
 
 ```bash
-# Full production build
-npm run build
-
-# Or using Make
-make build
+# Optional: for testing with real API
+KIMI_API_KEY=your-test-key-here
+KIMI_DEBUG=true
 ```
 
-### Cleaning Build Artifacts
+---
 
-```bash
-# Remove build artifacts
-make clean
+## Development Workflow
 
-# Deep clean (includes node_modules)
-make clean-all
+### Branch Naming Convention
+
+Format: `<type>/<short-description>`
+
+| Type | Purpose | Example |
+|------|---------|---------|
+| `feature/` | New features | `feature/add-voice-commands` |
+| `fix/` | Bug fixes | `fix/memory-leak-terminal` |
+| `docs/` | Documentation | `docs/update-api-reference` |
+| `refactor/` | Code refactoring | `refactor/simplify-context` |
+| `test/` | Test additions | `test/add-e2e-tests` |
+| `chore/` | Maintenance | `chore/update-dependencies` |
+| `perf/` | Performance | `perf/optimize-file-discovery` |
+
+### Before You Start
+
+1. **Check existing issues**: Look for existing issues or create one
+2. **Claim the issue**: Comment to let others know you're working on it
+3. **Keep scope focused**: One PR should address one concern
+
+### Development Cycle
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│    Create    │────▶│    Write     │────▶│    Test      │
+│    Branch    │     │     Code     │     │   Locally    │
+└──────────────┘     └──────────────┘     └──────┬───────┘
+                                                 │
+┌──────────────┐     ┌──────────────┐     ┌──────┴───────┐
+│    Merge     │◀────│     PR       │◀────│     Push     │
+│    to Main   │     │   Reviewed   │     │    Branch    │
+└──────────────┘     └──────────────┘     └──────────────┘
 ```
 
-### Running the Extension
+---
 
-```bash
-# Method 1: Press F5 in VS Code
-# Opens Extension Development Host
+## Coding Standards
 
-# Method 2: Command line
-make test-extension
+We follow strict coding standards to maintain code quality and consistency.
 
-# Method 3: Manual
-code --extensionDevelopmentPath=$(pwd)
+### TypeScript Standards
+
+✅ **Good Example:**
+```typescript
+// Explicit types, clear interfaces
+interface FileNode {
+  name: string;
+  path: string;
+  type: 'file' | 'directory';
+  children?: FileNode[];
+}
+
+function processFile(node: FileNode): string {
+  if (node.type === 'directory') {
+    return `Directory: ${node.name}`;
+  }
+  return node.path;
+}
 ```
 
-## Running Tests
+❌ **Bad Example:**
+```typescript
+// Implicit types, no interfaces
+function processFile(node) {
+  return node.path;
+}
+```
+
+### React Component Standards
+
+✅ **Good Example:**
+```typescript
+interface EditorProps {
+  filePath: string;
+  content: string;
+  onChange: (content: string) => void;
+  readonly?: boolean;
+}
+
+export const Editor: React.FC<EditorProps> = ({ 
+  filePath, 
+  content, 
+  onChange,
+  readonly = false 
+}) => {
+  const handleChange = useCallback((value: string) => {
+    onChange(value);
+  }, [onChange]);
+
+  return (
+    <div className="editor">
+      <MonacoEditor 
+        value={content}
+        onChange={handleChange}
+        readonly={readonly}
+      />
+    </div>
+  );
+};
+```
+
+### VS Code Extension Standards
+
+```typescript
+// Register commands properly
+export function activate(context: vscode.ExtensionContext) {
+  const disposable = vscode.commands.registerCommand(
+    'kimi.inlineEdit',
+    async () => {
+      try {
+        await inlineEditService.open();
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          `Failed to open inline edit: ${error.message}`
+        );
+      }
+    }
+  );
+  
+  context.subscriptions.push(disposable);
+}
+```
+
+### File Organization
+
+```
+src/
+├── agents/              # Multi-Agent System
+│   ├── __tests__/       # Unit tests
+│   └── *.ts             # Agent implementations
+├── discovery/           # Tree-based Discovery
+├── editing/             # Parallel Editing
+├── review/              # Auto Code Review
+├── context/             # Smart Context
+├── kimi/                # Wire Protocol
+├── panels/              # UI Panels
+├── providers/           # VS Code Providers
+├── commands/            # Command handlers
+├── utils/               # Utilities
+└── extension.ts         # Entry point
+```
+
+### Naming Conventions
+
+| Category | Convention | Example |
+|----------|-----------|---------|
+| Files | PascalCase for components | `Sidebar.tsx` |
+| Files | camelCase for utilities | `fileUtils.ts` |
+| Components | PascalCase | `Sidebar`, `EditorPanel` |
+| Hooks | camelCase with `use` | `useFileSystem` |
+| Constants | UPPER_SNAKE_CASE | `MAX_FILE_SIZE` |
+| Interfaces | PascalCase | `FileSystemOptions` |
+| Enums | PascalCase | `AgentType` |
+
+---
+
+## Testing Guidelines
 
 ### Test Structure
 
 ```
-src/test/
-├── mocks/
-│   └── vscode.ts          # VS Code API mocks
-├── suite/
-│   ├── extension.test.ts  # Extension tests
-│   ├── kimi/
-│   │   └── wire.test.ts   # Wire Protocol tests
-│   ├── context/           # Context tests
-│   └── utils/             # Utility tests
-└── runTest.ts             # Test runner
+src/
+├── agents/
+│   ├── orchestrator.ts
+│   └── __tests__/
+│       ├── orchestrator.test.ts
+│       └── fixtures/
+│           └── sample-tasks.ts
 ```
 
-### Running Tests
+### Unit Tests
 
-```bash
-# Run all tests
-npm test
-
-# Run tests with compilation
-make test
-
-# Run tests in CI mode (headless on Linux)
-make test-ci
-
-# Run specific test file
-npm test -- --grep "WireClient"
-```
-
-### Writing Tests
-
+✅ **Good Example:**
 ```typescript
-import * as assert from 'assert';
-import { WireClient } from '../../kimi/wire';
-
-suite('WireClient', () => {
-    let client: WireClient;
-
-    setup(() => {
-        client = new WireClient({ cliPath: '/path/to/cli' });
+describe('FileDiscoveryAgent', () => {
+  describe('discoverFiles', () => {
+    it('should return files matching query', async () => {
+      const agent = new FileDiscoveryAgent();
+      const files = await agent.discoverFiles('auth', mockContext);
+      
+      expect(files).toHaveLength(2);
+      expect(files[0].name).toBe('auth.ts');
     });
-
-    teardown(async () => {
-        await client.disconnect();
+    
+    it('should return empty array when no matches', async () => {
+      const agent = new FileDiscoveryAgent();
+      const files = await agent.discoverFiles('xyz123', mockContext);
+      
+      expect(files).toHaveLength(0);
     });
-
-    test('should connect to cli', async () => {
-        await client.connect();
-        assert.strictEqual(client.getStatus(), true);
-    });
-
-    test('should handle disconnection', async () => {
-        await client.connect();
-        await client.disconnect();
-        assert.strictEqual(client.getStatus(), false);
-    });
+  });
 });
 ```
 
-### Test Guidelines
+### Integration Tests
 
-1. **Use descriptive test names**: `should handle connection timeout`
-2. **Group related tests** in suites
-3. **Clean up** in `teardown()`
-4. **Mock external dependencies** (VS Code API, network)
-5. **Test edge cases** (empty input, errors, timeouts)
-
-## Making Changes
-
-### Branch Naming
-
-```
-feature/description     # New features
-bugfix/description      # Bug fixes
-docs/description        # Documentation updates
-refactor/description    # Code refactoring
-test/description        # Test additions
-chore/description       # Maintenance tasks
+```typescript
+describe('Wire Protocol', () => {
+  it('should send message and receive response', async () => {
+    const client = new WireClient({ cliPath: '/test/cli' });
+    await client.connect();
+    
+    const response = await client.sendMessage('Hello', mockContext);
+    
+    expect(response).toBeDefined();
+    expect(response.content).toContain('Hello');
+  });
+});
 ```
 
-### Commit Messages
+### Test Coverage
 
-Follow conventional commits:
+Minimum coverage requirements:
+
+| Category | Minimum |
+|----------|---------|
+| Statements | 80% |
+| Branches | 75% |
+| Functions | 80% |
+| Lines | 80% |
+
+Run coverage report:
+```bash
+npm test -- --coverage
+```
+
+---
+
+## Commit Message Guidelines
+
+We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification.
+
+### Format
 
 ```
 <type>(<scope>): <description>
 
 [optional body]
 
-[optional footer]
+[optional footer(s)]
 ```
 
-Types:
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation
-- `style`: Code style (formatting)
-- `refactor`: Code refactoring
-- `test`: Tests
-- `chore`: Build/config changes
+### Types
 
-Examples:
+| Type | Description | Example |
+|------|-------------|---------|
+| `feat` | New feature | `feat(agents): add voice interface` |
+| `fix` | Bug fix | `fix(discovery): handle circular deps` |
+| `docs` | Documentation | `docs(api): update endpoints` |
+| `style` | Code style | `style: fix indentation` |
+| `refactor` | Refactoring | `refactor(context): simplify manager` |
+| `perf` | Performance | `perf(search): optimize indexing` |
+| `test` | Tests | `test(agents): add unit tests` |
+| `chore` | Maintenance | `chore(deps): update typescript` |
+
+### Scopes
+
+Common scopes:
+- `agents` - Multi-Agent System
+- `discovery` - Tree-based Discovery
+- `editing` - Parallel Editing
+- `review` - Auto Code Review
+- `context` - Smart Context
+- `ui` - User Interface
+- `api` - API/Wire Protocol
+- `lsp` - Language Server Protocol
+
+### Examples
+
 ```
-feat(inline-edit): add support for multi-line selections
+feat(agents): add orchestrator workflow validation
 
-fix(wire-protocol): handle reconnection after cli crash
+Add validation to ensure all required agents are registered
+before executing a workflow. This prevents runtime errors.
 
-docs(api): add wire protocol examples
+Closes #123
 ```
 
-### Before Committing
+```
+fix(discovery): resolve memory leak in AST cache
+
+The AST cache was not properly clearing old entries,
+leading to unbounded memory growth in large projects.
+
+Fixes #456
+```
+
+### Rules
+
+1. Use imperative mood ("add" not "added")
+2. Don't capitalize the first letter
+3. No period at the end
+4. Keep first line under 72 characters
+5. Reference issues in footer
+
+---
+
+## Pull Request Process
+
+### Before Submitting
 
 ```bash
-# 1. Run linter
-npm run lint
-
-# 2. Run type checker
-npm run type-check
-
-# 3. Run tests
+# 1. Run tests
 npm test
 
-# 4. Build to verify
-npm run build
+# 2. Check types
+npx tsc --noEmit
+
+# 3. Lint
+npm run lint
+
+# 4. Format
+npm run format
 ```
 
-Or use Make:
-```bash
-make ci
-```
+### PR Description Template
 
-## Submitting a Pull Request
+```markdown
+## Summary
+Brief description of changes
 
-### PR Checklist
+## Changes
+- Specific change 1
+- Specific change 2
 
+## Type
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Refactoring
+- [ ] Documentation
+
+## Testing
+- [ ] Unit tests added/updated
+- [ ] Integration tests added/updated
+- [ ] Tested manually
+- [ ] E2E tests (if applicable)
+
+## Screenshots
+<!-- For UI changes -->
+
+## Related Issues
+Fixes #123
+Relates to #456
+
+## Checklist
 - [ ] Code follows style guidelines
-- [ ] Tests added/updated
-- [ ] Documentation updated
-- [ ] CHANGELOG.md updated
-- [ ] Commit messages follow conventions
-- [ ] PR description explains changes
+- [ ] Self-review completed
+- [ ] Changes are documented
+- [ ] Tests pass locally
+- [ ] No breaking changes (or documented)
+```
 
-### PR Process
+### PR Size Guidelines
 
-1. **Create a branch**
-   ```bash
-   git checkout -b feature/my-feature
-   ```
+| Size | Lines | Action |
+|------|-------|--------|
+| Small | < 100 | Ideal, easy to review |
+| Medium | 100-400 | Acceptable |
+| Large | 400+ | Requires special justification |
 
-2. **Make your changes**
-   - Write code
-   - Add tests
-   - Update docs
+Keep PRs small and focused. Large PRs are harder to review and more likely to introduce bugs.
 
-3. **Commit changes**
-   ```bash
-   git add .
-   git commit -m "feat(scope): description"
-   ```
+---
 
-4. **Push to your fork**
-   ```bash
-   git push origin feature/my-feature
-   ```
+## Code Review Process
 
-5. **Create Pull Request**
-   - Go to GitHub
-   - Click "New Pull Request"
-   - Fill in the template
-   - Link related issues
+See [CODE_REVIEW_GUIDELINES.md](../CODE_REVIEW_GUIDELINES.md) for detailed review process.
 
-### PR Review Process
+### Quick Reference
 
-1. Automated checks must pass (CI)
-2. Maintainer review
-3. Address feedback
-4. Approval and merge
+**For Authors:**
+- Respond to feedback within 24-48 hours
+- Address all blocking comments
+- Explain decisions when needed
+- Keep PR up to date with main
+
+**For Reviewers:**
+- Review within 24-48 hours
+- Use comment prefixes (`blocking:`, `suggestion:`, `nit:`)
+- Be constructive and specific
+- Approve when ready
+
+---
 
 ## Release Process
 
-### Version Bumping
+### Version Numbers
 
-```bash
-# Patch version (0.0.x)
-make bump-patch
+We follow [Semantic Versioning](https://semver.org/):
 
-# Minor version (0.x.0)
-make bump-minor
+- **MAJOR** - Breaking changes
+- **MINOR** - New features (backward compatible)
+- **PATCH** - Bug fixes
 
-# Major version (x.0.0)
-make bump-major
-```
+### Release Checklist
 
-### Creating a Release
+- [ ] Update CHANGELOG.md
+- [ ] Update version in package.json
+- [ ] Run full test suite
+- [ ] Create git tag
+- [ ] Build and package extension
+- [ ] Create GitHub release
+- [ ] Publish to VS Code Marketplace
 
-```bash
-# 1. Update CHANGELOG.md
-# 2. Create package
-make package
-
-# 3. Create GitHub release with .vsix attached
-# 4. Publish to marketplace (maintainers only)
-make publish
-```
-
-## Debugging
-
-### Extension Development
-
-1. Open project in VS Code
-2. Set breakpoints in source
-3. Press `F5` to launch Extension Host
-4. Trigger functionality
-5. Debug in main VS Code window
-
-### Enable Debug Logging
-
-```json
-// settings.json
-{
-  "kimi.debug": true
-}
-```
-
-View logs: Output panel → "Kimi IDE"
-
-### Common Issues
-
-**Issue**: Extension not loading
-```bash
-# Check VS Code version
-code --version  # Must be 1.86.0+
-
-# Check compilation
-npm run compile
-
-# Clear extension cache
-rm -rf ~/.vscode/extensions/kimi-ide*
-```
-
-**Issue**: Tests failing
-```bash
-# Rebuild test environment
-npm run compile
-
-# Check for missing mocks
-```
-
-**Issue**: Lint errors
-```bash
-# Auto-fix some issues
-npm run lint -- --fix
-```
+---
 
 ## Getting Help
 
-- Check [FAQ](./FAQ.md)
-- Open an issue on GitHub
-- Join our Discord community
-- Read [API Documentation](./API.md)
+### Resources
 
-## Code of Conduct
+- **Documentation**: [docs/](./)
+- **FAQ**: [FAQ.md](./FAQ.md)
+- **API Reference**: [API.md](./API.md)
+- **Architecture**: [ARCHITECTURE.md](./ARCHITECTURE.md)
 
-- Be respectful and inclusive
-- Welcome newcomers
-- Focus on constructive feedback
-- Respect maintainers' decisions
+### Communication Channels
 
-## License
+- **GitHub Issues**: Bug reports and feature requests
+- **GitHub Discussions**: Questions and general discussion
+- **Discord**: Real-time chat (link TBD)
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+### Asking Questions
+
+When asking for help:
+
+1. **Search first** - Check existing issues and docs
+2. **Be specific** - Provide context and details
+3. **Include code** - Share relevant code snippets
+4. **Show errors** - Include error messages and stack traces
+
+Good question example:
+```
+I'm trying to add a new agent to the system.
+
+I've created the file at `src/agents/myAgent.ts`:
+
+[code snippet]
+
+But when I try to register it, I get this error:
+
+[error message]
+
+I've checked the existing agents and my code looks similar.
+What am I missing?
+```
+
+---
+
+## Recognition
+
+Contributors will be:
+
+- Listed in CONTRIBUTORS.md
+- Mentioned in release notes
+- Added to the contributors graph
+
+Thank you for contributing to Kimi IDE! 🚀

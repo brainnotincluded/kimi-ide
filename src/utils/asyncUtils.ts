@@ -1,297 +1,88 @@
 /**
- * Async utility functions for Kimi IDE extension
- * Provides debounce, throttle, cancelable promises, and retry logic
+ * Async utility functions
+ * Helpers for async operations and promise handling
  */
-
-import { logger } from './logger';
-
-// Declare requestAnimationFrame for Node.js environment (VS Code extension)
-declare function requestAnimationFrame(callback: (time: number) => void): number;
-declare function cancelAnimationFrame(handle: number): void;
-
-// Debounce and Throttle types
-export type DebouncedFunction<T extends (...args: unknown[]) => unknown> = {
-    (...args: Parameters<T>): ReturnType<T>;
-    cancel(): void;
-    flush(): ReturnType<T> | undefined;
-};
-
-export type ThrottledFunction<T extends (...args: unknown[]) => unknown> = {
-    (...args: Parameters<T>): ReturnType<T>;
-    cancel(): void;
-};
-
-// Cancelable promise types
-export interface CancelToken {
-    isCancelled: boolean;
-    cancel(): void;
-    onCancel(callback: () => void): void;
-}
-
-export interface CancelablePromise<T> extends Promise<T> {
-    cancel(): void;
-}
-
-// Retry options
-export interface RetryOptions {
-    maxAttempts?: number;
-    delayMs?: number;
-    backoffMultiplier?: number;
-    maxDelayMs?: number;
-    retryCondition?: (error: unknown) => boolean;
-    onRetry?: (error: unknown, attempt: number) => void;
-}
-
-// Timeout options
-export interface TimeoutOptions {
-    timeoutMs: number;
-    errorMessage?: string;
-}
 
 /**
- * Create a cancel token
+ * Debounce a function
  */
-export function createCancelToken(): CancelToken {
-    let cancelled = false;
-    let cancelCallback: (() => void) | null = null;
+export function debounce<T extends (...args: any[]) => any>(
+    fn: T,
+    delay: number
+): T & { cancel(): void } {
+    let timeoutId: NodeJS.Timeout | null = null;
 
-    return {
-        get isCancelled() {
-            return cancelled;
-        },
-        cancel() {
-            if (!cancelled) {
-                cancelled = true;
-                cancelCallback?.();
-            }
-        },
-        onCancel(callback: () => void) {
-            cancelCallback = callback;
-            if (cancelled) {
-                callback();
-            }
-        },
-    };
-}
-
-/**
- * Make a promise cancelable
- */
-export function makeCancelable<T>(
-    promise: Promise<T>,
-    token?: CancelToken
-): CancelablePromise<T> {
-    let rejectFn: (reason?: unknown) => void;
-
-    const cancelablePromise = new Promise<T>((resolve, reject) => {
-        rejectFn = reject;
-
-        promise
-            .then(resolve)
-            .catch(reject);
-
-        if (token) {
-            token.onCancel(() => {
-                reject(new Error('Operation cancelled'));
-            });
-        }
-    }) as CancelablePromise<T>;
-
-    cancelablePromise.cancel = () => {
-        rejectFn?.(new Error('Operation cancelled'));
-    };
-
-    return cancelablePromise;
-}
-
-/**
- * Debounce function
- */
-export function debounce<T extends (...args: unknown[]) => unknown>(
-    func: T,
-    waitMs: number,
-    immediate: boolean = false
-): DebouncedFunction<T> {
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    let lastArgs: Parameters<T> | null = null;
-    let lastResult: ReturnType<T>;
-
-    const debounced = function (this: unknown, ...args: Parameters<T>): ReturnType<T> {
-        lastArgs = args;
-
-        const callNow = immediate && !timeoutId;
-
+    const debounced = function (this: any, ...args: Parameters<T>) {
         if (timeoutId) {
             clearTimeout(timeoutId);
         }
-
         timeoutId = setTimeout(() => {
+            fn.apply(this, args);
             timeoutId = null;
-            if (!immediate && lastArgs) {
-                lastResult = func.apply(this, lastArgs) as ReturnType<T>;
-                lastArgs = null;
-            }
-        }, waitMs);
-
-        if (callNow) {
-            lastResult = func.apply(this, args) as ReturnType<T>;
-        }
-
-        return lastResult;
-    } as DebouncedFunction<T>;
+        }, delay);
+    } as T & { cancel(): void };
 
     debounced.cancel = () => {
         if (timeoutId) {
             clearTimeout(timeoutId);
             timeoutId = null;
         }
-        lastArgs = null;
-    };
-
-    debounced.flush = () => {
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-            if (lastArgs) {
-                lastResult = func.apply(undefined, lastArgs) as ReturnType<T>;
-                lastArgs = null;
-            }
-        }
-        return lastResult;
     };
 
     return debounced;
 }
 
 /**
- * Throttle function
+ * Throttle a function
  */
-export function throttle<T extends (...args: unknown[]) => unknown>(
-    func: T,
-    limitMs: number
-): ThrottledFunction<T> {
+export function throttle<T extends (...args: any[]) => any>(
+    fn: T,
+    limit: number
+): T {
     let inThrottle = false;
     let lastArgs: Parameters<T> | null = null;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-    const throttled = function (this: unknown, ...args: Parameters<T>): ReturnType<T> {
-        lastArgs = args;
-
+    return function (this: any, ...args: Parameters<T>) {
         if (!inThrottle) {
+            fn.apply(this, args);
             inThrottle = true;
-            const result = func.apply(this, args) as ReturnType<T>;
-            
-            timeoutId = setTimeout(() => {
+            setTimeout(() => {
                 inThrottle = false;
-                if (lastArgs && lastArgs !== args) {
-                    throttled.apply(this, lastArgs);
+                if (lastArgs) {
+                    fn.apply(this, lastArgs);
+                    lastArgs = null;
                 }
-            }, limitMs);
-
-            return result;
+            }, limit);
+        } else {
+            lastArgs = args;
         }
-
-        return undefined as ReturnType<T>;
-    } as ThrottledFunction<T>;
-
-    throttled.cancel = () => {
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-        }
-        inThrottle = false;
-        lastArgs = null;
-    };
-
-    return throttled;
+    } as T;
 }
 
 /**
- * Throttle function with trailing call
- */
-export function throttleWithTrailing<T extends (...args: unknown[]) => unknown>(
-    func: T,
-    limitMs: number
-): ThrottledFunction<T> {
-    let lastExec = 0;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    let lastArgs: Parameters<T> | null = null;
-
-    const throttled = function (this: unknown, ...args: Parameters<T>): ReturnType<T> {
-        const now = Date.now();
-        const remaining = limitMs - (now - lastExec);
-        lastArgs = args;
-
-        const execute = () => {
-            lastExec = Date.now();
-            timeoutId = null;
-            if (lastArgs) {
-                func.apply(this, lastArgs);
-                lastArgs = null;
-            }
-        };
-
-        if (remaining <= 0 || remaining > limitMs) {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-                timeoutId = null;
-            }
-            lastExec = now;
-            return func.apply(this, args) as ReturnType<T>;
-        } else if (!timeoutId) {
-            timeoutId = setTimeout(execute, remaining);
-        }
-
-        return undefined as ReturnType<T>;
-    } as ThrottledFunction<T>;
-
-    throttled.cancel = () => {
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-        }
-        lastArgs = null;
-    };
-
-    return throttled;
-}
-
-/**
- * Retry an async operation
+ * Retry a function with exponential backoff
  */
 export async function retry<T>(
-    operation: () => Promise<T>,
-    options: RetryOptions = {}
+    fn: () => Promise<T>,
+    options: { maxAttempts?: number; delay?: number; backoff?: number } = {}
 ): Promise<T> {
-    const {
-        maxAttempts = 3,
-        delayMs = 1000,
-        backoffMultiplier = 2,
-        maxDelayMs = 30000,
-        retryCondition = () => true,
-        onRetry,
-    } = options;
+    const { maxAttempts = 3, delay = 1000, backoff = 2 } = options;
 
-    let lastError: unknown;
-    let currentDelay = delayMs;
+    let lastError: Error | undefined;
+    let currentDelay = delay;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-            return await operation();
+            return await fn();
         } catch (error) {
-            lastError = error;
-
-            if (attempt === maxAttempts || !retryCondition(error)) {
-                throw error;
+            lastError = error instanceof Error ? error : new Error(String(error));
+            
+            if (attempt === maxAttempts) {
+                throw lastError;
             }
 
-            logger.warn(`Attempt ${attempt} failed, retrying in ${currentDelay}ms...`, error);
-            onRetry?.(error, attempt);
-
             await sleep(currentDelay);
-
-            // Calculate next delay with exponential backoff
-            currentDelay = Math.min(currentDelay * backoffMultiplier, maxDelayMs);
+            currentDelay *= backoff;
         }
     }
 
@@ -299,206 +90,196 @@ export async function retry<T>(
 }
 
 /**
- * Execute promise with timeout
+ * Wrap a promise with a timeout
  */
-export function withTimeout<T>(
-    promise: Promise<T>,
-    options: TimeoutOptions
-): Promise<T> {
-    const { timeoutMs, errorMessage = `Operation timed out after ${timeoutMs}ms` } = options;
-
+export function timeout<T>(promise: Promise<T>, ms: number): Promise<T> {
     return new Promise((resolve, reject) => {
         const timeoutId = setTimeout(() => {
-            reject(new Error(errorMessage));
-        }, timeoutMs);
+            reject(new Error(`Operation timed out after ${ms}ms`));
+        }, ms);
 
         promise
             .then(resolve)
             .catch(reject)
-            .finally(() => {
-                clearTimeout(timeoutId);
-            });
+            .finally(() => clearTimeout(timeoutId));
     });
 }
 
 /**
- * Sleep for specified milliseconds
+ * Create a wrapped version of a function with timeout
+ */
+export function withTimeout<T extends (...args: any[]) => Promise<any>>(
+    fn: T,
+    ms: number
+): (...args: Parameters<T>) => Promise<ReturnType<T>> {
+    return (...args: Parameters<T>) => timeout(fn(...args), ms);
+}
+
+/**
+ * Sleep for a specified duration
  */
 export function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
+ * Run promises in parallel with optional concurrency limit
+ */
+export async function parallel<T>(
+    promises: Promise<T>[],
+    options: { concurrency?: number } = {}
+): Promise<T[]> {
+    const { concurrency } = options;
+
+    if (!concurrency || promises.length <= concurrency) {
+        return Promise.all(promises);
+    }
+
+    const results: T[] = [];
+    const executing: Promise<void>[] = [];
+
+    for (let i = 0; i < promises.length; i++) {
+        const promise = promises[i].then(result => {
+            results[i] = result;
+        });
+
+        executing.push(promise);
+
+        if (executing.length >= concurrency) {
+            await Promise.race(executing);
+            executing.splice(
+                executing.findIndex(p => p === promise),
+                1
+            );
+        }
+    }
+
+    await Promise.all(executing);
+    return results;
+}
+
+/**
  * Run promises sequentially
  */
-export async function runSequentially<T, R>(
-    items: T[],
-    fn: (item: T, index: number) => Promise<R>
-): Promise<R[]> {
-    const results: R[] = [];
-    for (let i = 0; i < items.length; i++) {
-        results.push(await fn(items[i], i));
+export async function sequential<T>(fns: (() => Promise<T>)[]): Promise<T[]> {
+    const results: T[] = [];
+    for (const fn of fns) {
+        results.push(await fn());
     }
     return results;
 }
 
 /**
- * Run promises with concurrency limit
+ * Process items in batches
  */
-export async function runWithConcurrency<T, R>(
+export async function batch<T, R>(
     items: T[],
-    fn: (item: T, index: number) => Promise<R>,
-    concurrency: number
+    processor: (item: T) => Promise<R>,
+    options: { batchSize?: number } = {}
 ): Promise<R[]> {
-    const results: (R | undefined)[] = new Array(items.length);
-    let index = 0;
+    const { batchSize = 10 } = options;
+    const results: R[] = [];
 
-    async function worker(): Promise<void> {
-        while (index < items.length) {
-            const currentIndex = index++;
-            results[currentIndex] = await fn(items[currentIndex], currentIndex);
-        }
+    for (let i = 0; i < items.length; i += batchSize) {
+        const batch = items.slice(i, i + batchSize);
+        const batchResults = await Promise.all(batch.map(processor));
+        results.push(...batchResults);
     }
 
-    const workers: Promise<void>[] = [];
-    for (let i = 0; i < Math.min(concurrency, items.length); i++) {
-        workers.push(worker());
-    }
-
-    await Promise.all(workers);
-    return results as R[];
+    return results;
 }
 
 /**
- * Create a promise that resolves after next animation frame
+ * Create a promise that resolves after a condition is met
  */
-export function nextAnimationFrame(): Promise<number> {
-    return new Promise(resolve => {
-        if (typeof requestAnimationFrame === 'function') {
-            requestAnimationFrame(resolve);
-        } else {
-            // Fallback for Node.js environment - use setImmediate for similar effect
-            setImmediate(() => resolve(Date.now()));
+export async function waitFor(
+    condition: () => boolean,
+    options: { timeout?: number; interval?: number } = {}
+): Promise<void> {
+    const { timeout: timeoutMs = 5000, interval = 100 } = options;
+    const startTime = Date.now();
+
+    while (!condition()) {
+        if (Date.now() - startTime > timeoutMs) {
+            throw new Error('Timeout waiting for condition');
         }
-    });
-}
-
-/**
- * Create a deferred promise
- */
-export function createDeferred<T>(): {
-    promise: Promise<T>;
-    resolve: (value: T) => void;
-    reject: (reason?: unknown) => void;
-} {
-    let resolveFn!: (value: T) => void;
-    let rejectFn!: (reason?: unknown) => void;
-
-    const promise = new Promise<T>((resolve, reject) => {
-        resolveFn = resolve;
-        rejectFn = reject;
-    });
-
-    return { promise, resolve: resolveFn, reject: rejectFn };
-}
-
-/**
- * Rate limiter
- */
-export class RateLimiter {
-    private queue: Array<() => void> = [];
-    private activeCount = 0;
-
-    constructor(private maxConcurrent: number) {}
-
-    async execute<T>(fn: () => Promise<T>): Promise<T> {
-        if (this.activeCount < this.maxConcurrent) {
-            return this.run(fn);
-        }
-
-        return new Promise((resolve, reject) => {
-            this.queue.push(() => {
-                this.run(fn).then(resolve).catch(reject);
-            });
-        });
+        await sleep(interval);
     }
+}
 
-    private async run<T>(fn: () => Promise<T>): Promise<T> {
-        this.activeCount++;
+/**
+ * Run a function with exponential backoff
+ */
+export async function withBackoff<T>(
+    fn: () => Promise<T>,
+    options: { maxDelay?: number; initialDelay?: number; maxAttempts?: number } = {}
+): Promise<T> {
+    const { maxDelay = 30000, initialDelay = 1000, maxAttempts = 5 } = options;
+    let delay = initialDelay;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
             return await fn();
-        } finally {
-            this.activeCount--;
-            this.processQueue();
-        }
-    }
-
-    private processQueue(): void {
-        if (this.queue.length > 0 && this.activeCount < this.maxConcurrent) {
-            const next = this.queue.shift();
-            next?.();
-        }
-    }
-}
-
-/**
- * Async mutex for critical sections
- */
-export class AsyncMutex {
-    private promise: Promise<void> = Promise.resolve();
-
-    async acquire(): Promise<() => void> {
-        const release = createDeferred<void>();
-        const currentPromise = this.promise;
-        
-        this.promise = this.promise.then(() => release.promise);
-        
-        await currentPromise;
-        
-        return () => release.resolve();
-    }
-
-    async runExclusive<T>(fn: () => Promise<T>): Promise<T> {
-        const release = await this.acquire();
-        try {
-            return await fn();
-        } finally {
-            release();
-        }
-    }
-}
-
-/**
- * Pause execution - useful for yielding control in long operations
- */
-export async function yieldControl(): Promise<void> {
-    return new Promise(resolve => setImmediate(resolve));
-}
-
-/**
- * Check if error is a cancellation error
- */
-export function isCancellationError(error: unknown): boolean {
-    return error instanceof Error && 
-        (error.message === 'Operation cancelled' || 
-         error.name === 'CancellationError' ||
-         error.message.includes('cancelled'));
-}
-
-/**
- * Wrap async function to catch errors
- */
-export function safeAsync<T extends (...args: unknown[]) => Promise<unknown>>(
-    fn: T,
-    errorHandler?: (error: unknown) => void
-): (...args: Parameters<T>) => Promise<ReturnType<T> | undefined> {
-    return async (...args: Parameters<T>): Promise<ReturnType<T> | undefined> => {
-        try {
-            return await fn(...args) as ReturnType<T>;
         } catch (error) {
-            errorHandler?.(error);
-            logger.error('Async operation failed:', error);
-            return undefined;
+            if (attempt === maxAttempts) {
+                throw error;
+            }
+            await sleep(delay);
+            delay = Math.min(delay * 2, maxDelay);
         }
-    };
+    }
+
+    throw new Error('Max attempts reached');
+}
+
+/**
+ * Memoize an async function
+ */
+export function memoizeAsync<T extends (...args: any[]) => Promise<any>>(
+    fn: T,
+    options: { ttl?: number; keyFn?: (...args: Parameters<T>) => string } = {}
+): T {
+    const { ttl = 60000, keyFn = (...args) => JSON.stringify(args) } = options;
+    const cache = new Map<string, { value: any; timestamp: number }>();
+
+    return async function (this: any, ...args: Parameters<T>): Promise<ReturnType<T>> {
+        const key = keyFn(...args);
+        const cached = cache.get(key);
+
+        if (cached && Date.now() - cached.timestamp < ttl) {
+            return cached.value;
+        }
+
+        const value = await fn.apply(this, args);
+        cache.set(key, { value, timestamp: Date.now() });
+        return value;
+    } as T;
+}
+
+/**
+ * Create an abortable promise
+ */
+export function abortable<T>(
+    promise: Promise<T>,
+    signal?: AbortSignal
+): Promise<T> {
+    if (!signal) return promise;
+
+    return new Promise((resolve, reject) => {
+        if (signal.aborted) {
+            reject(new Error('Aborted'));
+            return;
+        }
+
+        const abortHandler = () => {
+            reject(new Error('Aborted'));
+        };
+
+        signal.addEventListener('abort', abortHandler);
+
+        promise
+            .then(resolve)
+            .catch(reject)
+            .finally(() => signal.removeEventListener('abort', abortHandler));
+    });
 }
