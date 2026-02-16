@@ -637,24 +637,26 @@ export class ComposerPanel {
                                 </div>
                             \`;
                         } else {
-                            fileList.innerHTML = currentState.files.map(file => \`
-                                <div class="file-item">
-                                    <span class="file-icon">📄</span>
-                                    <div class="file-info">
-                                        <div class="file-name">${file.relativePath.split('/').pop()}</div>
-                                        <div class="file-path">${file.relativePath}</div>
-                                    </div>
-                                    <span class="file-status status-${file.status}">${file.status}</span>
-                                    <div class="file-actions">
-                                        <button onclick="viewDiff('${file.relativePath}')">Diff</button>
-                                        ${file.status === 'ready' ? `
-                                            <button onclick="acceptFile('${file.relativePath}')">Accept</button>
-                                            <button onclick="rejectFile('${file.relativePath}')">Reject</button>
-                                        ` : ''}
-                                        <button class="secondary" onclick="removeFile('${file.relativePath}')">Remove</button>
-                                    </div>
-                                </div>
-                            \`).join('');
+                            fileList.innerHTML = currentState.files.map(f => {
+                                const path = f.relativePath.replace(/'/g, "\\'");
+                                const fileName = f.relativePath.split('/').pop();
+                                const acceptReject = f.status === 'ready' 
+                                    ? '<button onclick="acceptFile(\'' + path + '\')">Accept</button><button onclick="rejectFile(\'' + path + '\')">Reject</button>'
+                                    : '';
+                                return '<div class="file-item">' +
+                                    '<span class="file-icon">📄</span>' +
+                                    '<div class="file-info">' +
+                                        '<div class="file-name">' + fileName + '</div>' +
+                                        '<div class="file-path">' + f.relativePath + '</div>' +
+                                    '</div>' +
+                                    '<span class="file-status status-' + f.status + '">' + f.status + '</span>' +
+                                    '<div class="file-actions">' +
+                                        '<button onclick="viewDiff(\'' + path + '\')">Diff</button>' +
+                                        acceptReject +
+                                        '<button class="secondary" onclick="removeFile(\'' + path + '\')">Remove</button>' +
+                                    '</div>' +
+                                '</div>';
+                            }).join('');
                         }
                         
                         // Update actions bar
