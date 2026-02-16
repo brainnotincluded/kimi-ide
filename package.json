@@ -188,6 +188,18 @@
         "title": "Chat with Current File",
         "category": "Kimi",
         "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "kimi.composer.open",
+        "title": "Open Composer",
+        "category": "Kimi",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "kimi.composer.openWithSelection",
+        "title": "Open Composer with Selection",
+        "category": "Kimi",
+        "icon": "$(edit)"
       }
     ],
     "keybindings": [
@@ -218,6 +230,13 @@
         "mac": "cmd+shift+k",
         "linux": "ctrl+shift+k",
         "win": "ctrl+shift+k"
+      },
+      {
+        "command": "kimi.composer.open",
+        "key": "cmd+shift+i",
+        "mac": "cmd+shift+i",
+        "linux": "ctrl+shift+i",
+        "win": "ctrl+shift+i"
       }
     ],
     "menus": {

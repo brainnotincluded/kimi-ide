@@ -71,6 +71,7 @@ import { ContextManager } from './context/contextManager';
 // UI Components
 // =============================================================================
 import { ChatPanel, ChatMessage } from './panels/chatPanel';
+import { ComposerPanel } from './panels/ComposerPanel';
 import { KimiStatusBar } from './statusBar';
 
 // =============================================================================
@@ -79,6 +80,8 @@ import { KimiStatusBar } from './statusBar';
 import { InlineEditProvider } from './providers/InlineEditProvider';
 import { DiffProvider } from './providers/DiffProvider';
 import { KimiCodeActionProvider, KimiInlineCompletionProvider } from './providers/CodeActionProvider';
+import { EnhancedInlineCompletionProvider } from './providers/EnhancedInlineCompletionProvider';
+import { MentionProvider } from './providers/MentionProvider';
 
 // =============================================================================
 // Terminal Integration
@@ -142,6 +145,8 @@ let languageClient: KimiLanguageClient | undefined;
 let inlineCompletionProvider: vscode.Disposable | undefined;
 let symbolProvider: SymbolProvider | undefined;
 let smartContextManager: ContextManager | undefined;
+let mentionProvider: MentionProvider | undefined;
+let composerPanel: ComposerPanel | undefined;
 
 // Multi-Agent System
 let multiAgentSystem: MultiAgentSystem | undefined;
@@ -529,14 +534,19 @@ function registerAllProviders(context: vscode.ExtensionContext): void {
     disposables.push(codeActionDisposable);
     context.subscriptions.push(codeActionDisposable);
     
-    // Register inline completion provider
-    const inlineCompletionProviderInstance = new KimiInlineCompletionProvider(kimiApi!);
+    // Register enhanced inline completion provider (Cursor-style)
+    const enhancedCompletionProvider = new EnhancedInlineCompletionProvider(kimiApi!);
     inlineCompletionProvider = vscode.languages.registerInlineCompletionItemProvider(
         { pattern: '**/*' },
-        inlineCompletionProviderInstance
+        enhancedCompletionProvider
     );
     disposables.push(inlineCompletionProvider);
     context.subscriptions.push(inlineCompletionProvider);
+    
+    // Register mention provider for @ symbols
+    mentionProvider = new MentionProvider();
+    disposables.push(mentionProvider);
+    context.subscriptions.push({ dispose: () => mentionProvider?.dispose() } as vscode.Disposable);
     
     // Register document link provider for terminal links
     // This is handled by TerminalManager
@@ -585,6 +595,11 @@ function registerAllCommands(context: vscode.ExtensionContext): void {
         // Parallel Editing commands
         'kimi.edit.parallel': (request: string) => parallelEdit(request),
         'kimi.edit.smart': (request: string) => smartEdit(request),
+        
+        // Composer commands
+        'kimi.composer.open': () => openComposer(),
+        'kimi.composer.openWithSelection': () => openComposerWithSelection(),
+        'kimi.composer.addFiles': (uris: vscode.Uri[]) => addFilesToComposer(uris),
         
         // Discovery commands
         'kimi.discovery.search': (query: string) => searchCodebase(query),
@@ -1525,4 +1540,33 @@ export async function deactivate(): Promise<void> {
     disposeCommands();
     
     log('✅ Kimi IDE extension deactivated');
+}
+
+// =============================================================================
+// Composer Command Handlers
+// =============================================================================
+
+async function openComposer(): Promise<void> {
+    const extensionUri = vscode.Uri.file(path.join(__dirname, '..'));
+    composerPanel = ComposerPanel.createOrShow(extensionUri);
+}
+
+async function openComposerWithSelection(): Promise<void> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.selection.isEmpty) {
+        showInfo('Please select code first');
+        return;
+    }
+
+    const extensionUri = vscode.Uri.file(path.join(__dirname, '..'));
+    composerPanel = ComposerPanel.createOrShow(extensionUri);
+    composerPanel.addContextFromSelection();
+}
+
+async function addFilesToComposer(uris: vscode.Uri[]): Promise<void> {
+    if (!composerPanel) {
+        const extensionUri = vscode.Uri.file(path.join(__dirname, '..'));
+        composerPanel = ComposerPanel.createOrShow(extensionUri);
+    }
+    // Files would be added via the panel's addFiles method
 }
