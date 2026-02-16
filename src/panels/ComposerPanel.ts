@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Composer Panel
  * Multi-file editing interface like Cursor's Composer

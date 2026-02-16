@@ -205,4 +205,12 @@ export class DiffProvider {
         
         return hunks;
     }
+
+    /**
+     * Dispose resources
+     */
+    dispose(): void {
+        this.diffDocument = undefined;
+        this.diffEditor = undefined;
+    }
 }

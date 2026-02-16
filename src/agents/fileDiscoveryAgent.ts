@@ -104,7 +104,9 @@ export class FileDiscoveryAgent extends BaseAgent {
             scannedFiles: candidates.length,
             relevantFiles: rankedFiles.length,
             executionTimeMs: Date.now() - startTime,
-            modelCalls: 1, // We do it in 1-2 calls
+            totalDirectories: 0,
+            filesByLanguage: {},
+            totalSize: 0,
         };
         
         return {
@@ -162,7 +164,7 @@ export class FileDiscoveryAgent extends BaseAgent {
             const isFile = i === parts.length - 1;
             const currentPath = path.join(root.path, parts.slice(0, i + 1).join(path.sep));
             
-            let child = current.children?.find(c => c.name === part);
+            let child = current.children?.find((c: FileTreeNode) => c.name === part);
             
             if (!child) {
                 child = {
@@ -223,7 +225,7 @@ export class FileDiscoveryAgent extends BaseAgent {
         request: FileDiscoveryRequest
     ): Promise<FileContext[]> {
         const candidates: FileContext[] = [];
-        const keywords = this.extractKeywords(request.description);
+        const keywords = this.extractKeywords(request.description || '');
         
         for (const filePath of files) {
             // Check cache first
@@ -308,17 +310,19 @@ export class FileDiscoveryAgent extends BaseAgent {
             exports: f.exports.slice(0, 5),
         }));
         
-        const prompt = this.buildRankingPrompt(request.description, fileSummaries);
+        const prompt = this.buildRankingPrompt(request.description || '', fileSummaries);
         
         // Single model call to rank all files
         // Note: In real implementation, this would call the Kimi API
         // For now, we use heuristics as fallback
-        const ranked = this.rankByHeuristics(limitedCandidates, request.description);
+        const ranked = this.rankByHeuristics(limitedCandidates, request.description || '');
         
         return ranked.map((ctx, index) => ({
             path: ctx.path,
+            score: Math.max(0, 1 - index / ranked.length),
             relevanceScore: Math.max(0, 1 - index / ranked.length),
-            reasons: this.generateReasons(ctx, request.description),
+            relevance: (index < 3 ? 'high' : index < 10 ? 'medium' : 'low') as 'high' | 'medium' | 'low',
+            reasons: this.generateReasons(ctx, request.description || ''),
             size: ctx.size,
             language: ctx.language,
             lastModified: Date.now(), // Would get actual mtime in real impl
@@ -403,8 +407,11 @@ export class FileDiscoveryAgent extends BaseAgent {
                 if (symbols) {
                     file.symbols = symbols.slice(0, 10).map(s => ({
                         name: s.name,
+                        type: 'function' as const,
                         kind: vscode.SymbolKind[s.kind],
+                        filePath: file.path,
                         line: s.location.range.start.line,
+                        column: s.location.range.start.character,
                     }));
                 }
             } catch {
@@ -509,9 +516,13 @@ export class FileDiscoveryAgent extends BaseAgent {
                 if (match) {
                     symbols.push({
                         name: match[1],
+                        type: match[0].includes('class') ? 'class' : 
+                              match[0].includes('function') ? 'function' : 'variable',
                         kind: match[0].includes('class') ? 'class' : 
                               match[0].includes('function') ? 'function' : 'variable',
+                        filePath: '',
                         line: i + 1,
+                        column: 0,
                         signature: line.trim(),
                     });
                 }
@@ -522,8 +533,11 @@ export class FileDiscoveryAgent extends BaseAgent {
                 if (match) {
                     symbols.push({
                         name: match[1],
+                        type: match[0].includes('class') ? 'class' : 'function',
                         kind: match[0].includes('class') ? 'class' : 'function',
+                        filePath: '',
                         line: i + 1,
+                        column: 0,
                         signature: line.trim(),
                     });
                 }
@@ -605,7 +619,7 @@ Response format: ["path/to/file1.ts", "path/to/file2.ts", ...]`;
         // Pre-load file cache if needed
     }
     
-    protected onMessage<T>(message: AgentMessage<T>): void {
+    protected onMessage(message: AgentMessage): void {
         this.log('Received message:', message.type);
     }
     

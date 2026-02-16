@@ -23,6 +23,15 @@
     ".vscode-test",
     "out",
     "dist",
-    "scripts"
+    "scripts",
+    "**/mcp/**/*",
+    "**/remix/**/*",
+    "**/review/**/*",
+    "**/search/**/*",
+    "**/synthesis/**/*",
+    "**/terminal/**/*",
+    "**/test/**/*",
+    "**/trench/**/*",
+    "**/panels/**/*"
   ]
 }

@@ -6,6 +6,74 @@
 import * as vscode from 'vscode';
 
 /**
+ * Mention types
+ */
+export type Mention = FileMention | SymbolMention | UrlMention;
+
+export interface FileMention {
+    type: 'file';
+    path: string;
+    line?: number;
+    column?: number;
+}
+
+export interface SymbolMention {
+    type: 'symbol';
+    name: string;
+    kind: string;
+    filePath?: string;
+}
+
+export interface UrlMention {
+    type: 'url';
+    url: string;
+}
+
+/**
+ * Resolved mention
+ */
+export interface ResolvedMention {
+    type: 'file' | 'symbol' | 'url' | 'folder';
+    content: string;
+    path?: string;
+    value?: string;
+    files?: string[];
+    symbols?: string[];
+    metadata?: Record<string, any>;
+}
+
+/**
+ * Auto context
+ */
+export interface AutoContext {
+    imports: string[];
+    relatedFiles: any[];
+    testFiles: string[];
+    openFiles?: any[];
+    currentFile?: any;
+}
+
+/**
+ * Context config
+ */
+export interface ContextConfig {
+    maxTokens: number;
+    includeImports: boolean;
+    includeRelated: boolean;
+    includeTests: boolean;
+}
+
+/**
+ * Mention completion
+ */
+export interface MentionCompletion {
+    label: string;
+    kind: 'file' | 'symbol' | 'url';
+    detail?: string;
+    insertText: string;
+}
+
+/**
  * Context resolution options
  */
 export interface ContextOptions {
@@ -26,6 +94,9 @@ export interface ResolvedContext {
     files: string[];
     symbols: string[];
     tokenCount: number;
+    mentions?: ResolvedMention[];
+    autoContext?: AutoContext;
+    totalTokens?: number;
 }
 
 /**
@@ -205,6 +276,66 @@ export class ContextResolver {
         }
         
         return undefined;
+    }
+
+    /**
+     * Parse mentions from text
+     */
+    parseMentions(text: string): Mention[] {
+        const mentions: Mention[] = [];
+        
+        // Parse file mentions: @file/path or @"file path"
+        const fileRegex = /@(?:"([^"]+)"|([\w\-\./]+))/g;
+        let match;
+        while ((match = fileRegex.exec(text)) !== null) {
+            const path = match[1] || match[2];
+            mentions.push({ type: 'file', path });
+        }
+        
+        return mentions;
+    }
+
+    /**
+     * Resolve file context
+     */
+    async resolveFileContext(filePath: string): Promise<ResolvedContext> {
+        const uri = vscode.Uri.file(filePath);
+        const document = await vscode.workspace.openTextDocument(uri);
+        const content = document.getText();
+        
+        return {
+            content,
+            files: [filePath],
+            symbols: [],
+            tokenCount: this.estimateTokens(content),
+        };
+    }
+
+    /**
+     * Get current context
+     */
+    async getCurrentContext(): Promise<ResolvedContext> {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return {
+                content: '',
+                files: [],
+                symbols: [],
+                tokenCount: 0,
+            };
+        }
+        
+        return this.resolve({
+            document: editor.document,
+            position: editor.selection.active,
+        });
+    }
+
+    /**
+     * Set context
+     */
+    setContext(key: string, content: string): void {
+        this.cache.set(key, { content, timestamp: Date.now() });
     }
 
     /**

@@ -513,7 +513,7 @@ export function createPublicApi(
         
         async addFileToContext(uri: vscode.Uri): Promise<boolean> {
             try {
-                const context = contextResolver.resolveFileContext(uri);
+                const context = await contextResolver.resolveFileContext(uri.fsPath);
                 if (context) {
                     updateContext({
                         customData: {

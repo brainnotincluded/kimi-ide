@@ -4,7 +4,7 @@
  * Экспорты для интеграции с Wire Protocol (JSON-RPC поверх stdio)
  */
 
-export { WireClient } from "./wire";
+export * from "./wire";
 export { KimiClient } from "./kimiClient";
 export * from "./wireTypes";
 

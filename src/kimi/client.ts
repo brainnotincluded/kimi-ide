@@ -38,9 +38,9 @@ export class KimiClient implements vscode.Disposable {
             );
 
             // Обработка ошибок
-            this.connection.onError((error: Error) => {
+            this.connection.onError((error: any) => {
                 console.error('Kimi RPC error:', error);
-                vscode.window.showErrorMessage(`Kimi RPC error: ${error.message}`);
+                vscode.window.showErrorMessage(`Kimi RPC error: ${error}`);
             });
 
             this.connection.onClose(() => {

@@ -68,7 +68,7 @@ export class EditorAgent extends BaseAgent {
         
         // Execute all strategies in parallel
         const strategyResults = await Promise.all(
-            strategies.map(strategy => 
+            strategies.map((strategy: EditStrategy) => 
                 this.executeStrategy(strategy, request, signal)
                     .catch(error => ({
                         strategy,
@@ -183,7 +183,7 @@ export class EditorAgent extends BaseAgent {
         }
         
         // Create transformation based on instruction
-        const transformed = await this.transformAst(sourceFile, request.instruction);
+        const transformed = await this.transformAst(sourceFile, request.instruction || '');
         
         if (signal.aborted) {
             throw new Error('Aborted');
@@ -327,7 +327,7 @@ export class EditorAgent extends BaseAgent {
         let modifiedText = originalText;
         
         // Extract patterns from instruction
-        const patterns = this.extractPatterns(request.instruction);
+        const patterns = this.extractPatterns(request.instruction || '');
         
         for (const pattern of patterns) {
             if (signal.aborted) {
@@ -339,7 +339,7 @@ export class EditorAgent extends BaseAgent {
         
         // If no patterns matched, try line-based replacement
         if (modifiedText === originalText) {
-            modifiedText = this.tryLineBasedReplace(originalText, request.instruction);
+            modifiedText = this.tryLineBasedReplace(originalText, request.instruction || '');
         }
         
         return this.generateDiff(request.filePath, originalText, modifiedText);
@@ -454,7 +454,7 @@ export class EditorAgent extends BaseAgent {
         const originalText = document.getText();
         
         // Parse instruction to understand semantic meaning
-        const semanticChange = this.parseSemanticChange(request.instruction);
+        const semanticChange = this.parseSemanticChange(request.instruction || '');
         
         if (signal.aborted) {
             throw new Error('Aborted');
@@ -682,9 +682,9 @@ export class EditorAgent extends BaseAgent {
         }
         
         const additions = hunks.reduce((sum, h) => 
-            sum + h.lines.filter(l => l.type === 'add').length, 0);
+            sum + h.lines.filter((l: DiffLine) => l.type === 'add').length, 0);
         const deletions = hunks.reduce((sum, h) => 
-            sum + h.lines.filter(l => l.type === 'remove').length, 0);
+            sum + h.lines.filter((l: DiffLine) => l.type === 'remove').length, 0);
         
         return {
             originalPath: filePath,
@@ -742,7 +742,7 @@ export class EditorAgent extends BaseAgent {
         // Initialize TypeScript program if needed
     }
     
-    protected onMessage<T>(message: AgentMessage<T>): void {
+    protected onMessage(message: AgentMessage): void {
         this.log('Received message:', message.type);
     }
     

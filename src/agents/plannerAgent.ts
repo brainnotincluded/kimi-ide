@@ -199,7 +199,7 @@ export class PlannerAgent extends BaseAgent {
         
         for (const [dir, files] of Array.from(filesByDir.entries())) {
             // Sort files by relevance score
-            files.sort((a, b) => b.relevanceScore - a.relevanceScore);
+            files.sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
             
             for (const file of files) {
                 if (request.constraints?.maxChanges && changes.length >= request.constraints.maxChanges) {
@@ -253,7 +253,7 @@ export class PlannerAgent extends BaseAgent {
         const filename = path.basename(file.path).toLowerCase();
         
         // Check for new file creation
-        if (desc.includes('create') && file.relevanceScore < 0.3) {
+        if (desc.includes('create') && (file.relevanceScore || 0) < 0.3) {
             return 'create';
         }
         
@@ -354,15 +354,15 @@ export class PlannerAgent extends BaseAgent {
                 
                 // Same directory dependency (lower order depends on higher order)
                 if (path.dirname(change.filePath) === path.dirname(other.filePath)) {
-                    if (change.order > other.order) {
-                        change.dependencies.push(other.id);
+                    if ((change.order || 0) > (other.order || 0)) {
+                        change.dependencies!.push(other.id);
                     }
                 }
                 
                 // Type definition files should be modified first
                 if (other.filePath.endsWith('.d.ts') && !change.filePath.endsWith('.d.ts')) {
-                    if (!change.dependencies.includes(other.id)) {
-                        change.dependencies.push(other.id);
+                    if (!change.dependencies!.includes(other.id)) {
+                        change.dependencies!.push(other.id);
                     }
                 }
             }
@@ -376,7 +376,7 @@ export class PlannerAgent extends BaseAgent {
         const dependencies: ChangeDependency[] = [];
         
         for (const change of changes) {
-            for (const depId of change.dependencies) {
+            for (const depId of change.dependencies || []) {
                 const dep = changes.find(c => c.id === depId);
                 if (dep) {
                     dependencies.push({
@@ -453,7 +453,7 @@ export class PlannerAgent extends BaseAgent {
         }
         
         // Check for dependency complexity
-        const complexDeps = changes.filter(c => c.dependencies.length > 5);
+        const complexDeps = changes.filter(c => (c.dependencies || []).length > 5);
         if (complexDeps.length > 0) {
             risks.push({
                 type: 'dependency_complexity',
@@ -475,7 +475,10 @@ export class PlannerAgent extends BaseAgent {
     ): ExecutionGraph {
         const nodes: ExecutionNode[] = changes.map(c => ({
             id: c.id,
+            type: 'editor',
             changeId: c.id,
+            input: {},
+            dependencies: c.dependencies || [],
             status: 'pending',
         }));
         
@@ -569,7 +572,7 @@ export class PlannerAgent extends BaseAgent {
             }
             
             // Add time for dependencies
-            changeTime += change.dependencies.length * 1000;
+            changeTime += (change.dependencies || []).length * 1000;
             
             totalMs += changeTime;
         }
@@ -585,7 +588,7 @@ export class PlannerAgent extends BaseAgent {
         // Planner is ready immediately
     }
     
-    protected onMessage<T>(message: AgentMessage<T>): void {
+    protected onMessage(message: AgentMessage): void {
         this.log('Received message:', message.type);
     }
     

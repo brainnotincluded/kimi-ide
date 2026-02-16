@@ -9,6 +9,7 @@ import {
     AgentType,
     AgentMessage,
     AgentStatus,
+    AgentPriority,
     UserRequest,
     ExecutionWorkflow,
     WorkflowStage,
@@ -128,11 +129,11 @@ export class OrchestratorAgent extends BaseAgent {
     private createWorkflow(request: UserRequest): ExecutionWorkflow {
         return {
             id: `workflow_${Date.now()}`,
-            requestId: request.id,
+            request: request,
             stages: [],
             status: 'pending',
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
+            startTime: Date.now(),
+            artifacts: [],
         };
     }
     
@@ -173,15 +174,15 @@ export class OrchestratorAgent extends BaseAgent {
         
         // Determine strategy based on request complexity
         if (agents.length >= 3) {
-            strategy = ' DAG'; // Use dependency graph for complex workflows
+            strategy = 'mixed'; // Use dependency graph for complex workflows
         } else if (agents.length === 2 && agents.includes('fileDiscovery')) {
             strategy = 'parallel'; // Can run discovery in parallel with some tasks
         }
         
         return {
             agents,
-            parallel: strategy !== 'sequential',
             strategy,
+            priority: AgentPriority.NORMAL,
             reasoning: `Spawned ${agents.join(', ')} based on request analysis`,
         };
     }
@@ -203,7 +204,7 @@ export class OrchestratorAgent extends BaseAgent {
             case 'parallel':
                 results.push(...await this.executeParallel(workflow, decision.agents));
                 break;
-            case ' DAG':
+            case 'mixed':
                 results.push(...await this.executeDAG(workflow, decision.agents));
                 break;
         }
@@ -268,6 +269,8 @@ export class OrchestratorAgent extends BaseAgent {
             reviewer: ['editor'],
             testing: ['editor'],
             orchestrator: [],
+            analyzer: [],
+            custom: [],
         };
         
         // Execute in waves based on dependencies
@@ -316,9 +319,8 @@ export class OrchestratorAgent extends BaseAgent {
             id: `stage_${agentType}_${Date.now()}`,
             name: agentType,
             agentType,
-            dependencies: [],
+            dependsOn: [],
             status: 'running',
-            inputs: { input },
         };
         
         workflow.stages.push(stage);
@@ -335,8 +337,8 @@ export class OrchestratorAgent extends BaseAgent {
             
             this.runningAgents.delete(agent.id);
             
-            stage.status = result.success ? 'completed' : 'error';
-            stage.outputs = result.data;
+            stage.status = result.success ? 'completed' : 'failed';
+            stage.result = result;
             
             // Cleanup agent
             await agent.dispose();
@@ -350,7 +352,7 @@ export class OrchestratorAgent extends BaseAgent {
             };
             
         } catch (error) {
-            stage.status = 'error';
+            stage.status = 'failed';
             return {
                 stageId: stage.id,
                 agentType,
@@ -455,7 +457,7 @@ export class OrchestratorAgent extends BaseAgent {
         return undefined as TOutput;
     }
     
-    protected onMessage<T>(message: AgentMessage<T>): void {
+    protected onMessage(message: AgentMessage): void {
         this.log('Received message:', message);
         
         switch (message.type) {

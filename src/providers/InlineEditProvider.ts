@@ -141,4 +141,11 @@ export class InlineEditProvider {
             this.history.shift();
         }
     }
+
+    /**
+     * Dispose resources
+     */
+    dispose(): void {
+        this.history = [];
+    }
 }

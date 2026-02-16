@@ -35,7 +35,7 @@ export abstract class BaseAgent extends EventEmitter implements BaseAgent {
     public readonly id: string;
     public readonly type: AgentType;
     public readonly config: AgentConfig;
-    public status: AgentStatus = 'idle';
+    public status: AgentStatus = AgentStatus.IDLE;
     
     protected messageQueue: AgentMessage[] = [];
     protected abortController?: AbortController;
@@ -63,7 +63,7 @@ export abstract class BaseAgent extends EventEmitter implements BaseAgent {
     public async initialize(): Promise<void> {
         this.log('Initializing...');
         await this.onInitialize();
-        this.setStatus('idle');
+        this.setStatus(AgentStatus.IDLE);
         this.log('Initialized');
     }
     
@@ -72,7 +72,7 @@ export abstract class BaseAgent extends EventEmitter implements BaseAgent {
      */
     public async execute<TInput, TOutput>(input: TInput): Promise<AgentResult<TOutput>> {
         this.startTime = Date.now();
-        this.setStatus('running');
+        this.setStatus(AgentStatus.RUNNING);
         
         // Create abort controller for timeout
         this.abortController = new AbortController();
@@ -98,12 +98,11 @@ export abstract class BaseAgent extends EventEmitter implements BaseAgent {
             const agentResult: AgentResult<TOutput> = {
                 success: true,
                 agentId: this.id,
-                agentType: this.type,
                 data: result,
                 executionTimeMs: Date.now() - this.startTime,
             };
             
-            this.setStatus('completed');
+            this.setStatus(AgentStatus.IDLE);
             this.emit('complete', agentResult);
             
             return agentResult;
@@ -115,12 +114,11 @@ export abstract class BaseAgent extends EventEmitter implements BaseAgent {
             const agentResult: AgentResult<TOutput> = {
                 success: false,
                 agentId: this.id,
-                agentType: this.type,
                 error: agentError,
                 executionTimeMs: Date.now() - (this.startTime ?? Date.now()),
             };
             
-            this.setStatus('error');
+            this.setStatus(AgentStatus.ERROR);
             this.emit('error', agentError);
             
             // Retry logic
@@ -139,7 +137,7 @@ export abstract class BaseAgent extends EventEmitter implements BaseAgent {
     public async cancel(): Promise<void> {
         this.log('Cancelling...');
         this.abortController?.abort('cancelled');
-        this.setStatus('cancelled');
+        this.setStatus(AgentStatus.STOPPED);
         await this.onCancel();
         this.log('Cancelled');
     }
@@ -158,13 +156,13 @@ export abstract class BaseAgent extends EventEmitter implements BaseAgent {
     /**
      * Отправка сообщения другому агенту
      */
-    public sendMessage<T>(
+    public sendMessage(
         to: string,
         type: AgentMessageType,
-        payload: T,
+        payload: any,
         correlationId?: string
     ): void {
-        const message: AgentMessage<T> = {
+        const message: AgentMessage = {
             id: this.generateId(),
             type,
             from: this.id,
@@ -174,17 +172,17 @@ export abstract class BaseAgent extends EventEmitter implements BaseAgent {
             correlationId,
         };
         
-        this.emit('message:sent', message);
+        this.emit('message', message);
         this.log('Sent message:', message);
     }
     
     /**
      * Обработка входящего сообщения
      */
-    public receiveMessage<T>(message: AgentMessage<T>): void {
+    public receiveMessage(message: AgentMessage): void {
         this.log('Received message:', message);
         this.messageQueue.push(message);
-        this.emit('message:received', message);
+        this.emit('message', message);
         this.onMessage(message);
     }
     
@@ -194,7 +192,7 @@ export abstract class BaseAgent extends EventEmitter implements BaseAgent {
     protected setStatus(newStatus: AgentStatus): void {
         const previous = this.status;
         this.status = newStatus;
-        this.emit('status:change', { status: newStatus, previous });
+        this.emit('status', newStatus);
     }
     
     /**
@@ -212,12 +210,14 @@ export abstract class BaseAgent extends EventEmitter implements BaseAgent {
             return {
                 code: error.name,
                 message: error.message,
-                stack: error.stack,
+                details: error.stack,
+                recoverable: false,
             };
         }
         return {
             code: 'UNKNOWN_ERROR',
             message: String(error),
+            recoverable: false,
         };
     }
     
@@ -256,7 +256,7 @@ export abstract class BaseAgent extends EventEmitter implements BaseAgent {
     /**
      * Обработка сообщения
      */
-    protected abstract onMessage<T>(message: AgentMessage<T>): void;
+    protected abstract onMessage(message: AgentMessage): void;
     
     /**
      * Отмена выполнения
@@ -325,7 +325,7 @@ export class AgentRegistry {
         this.agents.set(agent.id, agent);
         
         // Setup message forwarding
-        agent.on('message:sent', (message: AgentMessage) => {
+        agent.on('message', (message: AgentMessage) => {
             this.routeMessage(message);
         });
         

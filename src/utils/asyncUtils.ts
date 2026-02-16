@@ -3,6 +3,221 @@
  * Helpers for async operations and promise handling
  */
 
+// ============================================================================
+// Types
+// ============================================================================
+
+export interface CancelToken {
+    isCancelled: boolean;
+    cancel: () => void;
+}
+
+export interface CancelablePromise<T> extends Promise<T> {
+    cancel: () => void;
+}
+
+export interface DebouncedFunction<T extends (...args: any[]) => any> {
+    (...args: Parameters<T>): void;
+    cancel: () => void;
+}
+
+export interface ThrottledFunction<T extends (...args: any[]) => any> {
+    (...args: Parameters<T>): void;
+}
+
+export interface RetryOptions {
+    maxAttempts?: number;
+    delay?: number;
+    backoff?: number;
+}
+
+export interface TimeoutOptions {
+    timeout?: number;
+    interval?: number;
+}
+
+// ============================================================================
+// Cancel Token
+// ============================================================================
+
+export function createCancelToken(): CancelToken {
+    const token: CancelToken = {
+        isCancelled: false,
+        cancel: () => { token.isCancelled = true; }
+    };
+    return token;
+}
+
+export function makeCancelable<T>(promise: Promise<T>): CancelablePromise<T> {
+    let rejectFn: (reason?: any) => void;
+    
+    const cancelablePromise = new Promise<T>((resolve, reject) => {
+        rejectFn = reject;
+        promise.then(resolve).catch(reject);
+    }) as CancelablePromise<T>;
+    
+    cancelablePromise.cancel = () => {
+        rejectFn(new Error('Cancelled'));
+    };
+    
+    return cancelablePromise;
+}
+
+// ============================================================================
+// Throttle with trailing
+// ============================================================================
+
+export function throttleWithTrailing<T extends (...args: any[]) => any>(
+    fn: T,
+    limit: number
+): ThrottledFunction<T> {
+    return throttle(fn, limit);
+}
+
+// ============================================================================
+// Sequential execution
+// ============================================================================
+
+export async function runSequentially<T>(fns: (() => Promise<T>)[]): Promise<T[]> {
+    return sequential(fns);
+}
+
+// ============================================================================
+// Concurrency
+// ============================================================================
+
+export async function runWithConcurrency<T>(
+    promises: Promise<T>[],
+    concurrency: number
+): Promise<T[]> {
+    return parallel(promises, { concurrency });
+}
+
+// ============================================================================
+// Animation frame
+// ============================================================================
+
+export function nextAnimationFrame(): Promise<number> {
+    // Use setTimeout as fallback for Node.js environment where requestAnimationFrame is not available
+    return new Promise(resolve => setTimeout(() => resolve(0), 0));
+}
+
+// ============================================================================
+// Deferred
+// ============================================================================
+
+export interface Deferred<T> {
+    promise: Promise<T>;
+    resolve: (value: T) => void;
+    reject: (reason?: any) => void;
+}
+
+export function createDeferred<T>(): Deferred<T> {
+    let resolveFn: (value: T) => void;
+    let rejectFn: (reason?: any) => void;
+    
+    const promise = new Promise<T>((resolve, reject) => {
+        resolveFn = resolve;
+        rejectFn = reject;
+    });
+    
+    return {
+        promise,
+        resolve: resolveFn!,
+        reject: rejectFn!
+    };
+}
+
+// ============================================================================
+// Rate Limiter
+// ============================================================================
+
+export class RateLimiter {
+    private tokens: number;
+    private lastRefill: number;
+    private readonly maxTokens: number;
+    private readonly refillRate: number;
+
+    constructor(maxTokens: number, refillRate: number) {
+        this.maxTokens = maxTokens;
+        this.tokens = maxTokens;
+        this.refillRate = refillRate;
+        this.lastRefill = Date.now();
+    }
+
+    async acquire(): Promise<void> {
+        this.refill();
+        if (this.tokens > 0) {
+            this.tokens--;
+            return;
+        }
+        await sleep(1000 / this.refillRate);
+        return this.acquire();
+    }
+
+    private refill(): void {
+        const now = Date.now();
+        const elapsed = now - this.lastRefill;
+        const tokensToAdd = Math.floor(elapsed * (this.refillRate / 1000));
+        this.tokens = Math.min(this.maxTokens, this.tokens + tokensToAdd);
+        this.lastRefill = now;
+    }
+}
+
+// ============================================================================
+// Async Mutex
+// ============================================================================
+
+export class AsyncMutex {
+    private promise: Promise<void> = Promise.resolve();
+
+    async acquire(): Promise<() => void> {
+        const release = this.promise;
+        let resolveRelease: () => void;
+        this.promise = new Promise(resolve => {
+            resolveRelease = resolve;
+        });
+        await release;
+        return () => resolveRelease!();
+    }
+}
+
+// ============================================================================
+// Yield control
+// ============================================================================
+
+export async function yieldControl(): Promise<void> {
+    await sleep(0);
+}
+
+// ============================================================================
+// Cancellation error
+// ============================================================================
+
+export function isCancellationError(error: unknown): boolean {
+    return error instanceof Error && 
+        (error.message === 'Cancelled' || error.message === 'Aborted');
+}
+
+// ============================================================================
+// Safe async
+// ============================================================================
+
+export async function safeAsync<T>(
+    fn: () => Promise<T>,
+    defaultValue: T
+): Promise<T> {
+    try {
+        return await fn();
+    } catch {
+        return defaultValue;
+    }
+}
+
+// ============================================================================
+// Existing functions
+// ============================================================================
+
 /**
  * Debounce a function
  */

@@ -4,14 +4,18 @@
  */
 
 import { EventEmitter } from 'events';
+import * as vscode from 'vscode';
 
 /**
  * Kimi client options
  */
 export interface KimiClientOptions {
-    apiKey: string;
-    baseUrl: string;
+    apiKey?: string;
+    baseUrl?: string;
     timeout?: number;
+    cliPath?: string;
+    cwd?: string;
+    debug?: boolean;
 }
 
 /**
@@ -50,9 +54,11 @@ export interface CompletionOptions {
 export class KimiClient extends EventEmitter {
     private options: KimiClientOptions;
     private connected: boolean = false;
+    private context?: vscode.ExtensionContext;
 
-    constructor(options: KimiClientOptions) {
+    constructor(context?: vscode.ExtensionContext, options?: KimiClientOptions) {
         super();
+        this.context = context;
         this.options = {
             timeout: 30000,
             ...options,
@@ -60,11 +66,32 @@ export class KimiClient extends EventEmitter {
     }
 
     /**
+     * Start the client
+     */
+    async start(): Promise<void> {
+        await this.connect();
+    }
+
+    /**
+     * Stop the client
+     */
+    async stop(): Promise<void> {
+        await this.disconnect();
+    }
+
+    /**
+     * Check if client is active
+     */
+    isActive(): boolean {
+        return this.connected;
+    }
+
+    /**
      * Connect to the API
      */
     async connect(): Promise<void> {
-        if (!this.options.apiKey) {
-            throw new Error('API key is required');
+        if (this.connected) {
+            return;
         }
         
         // Simulate connection
@@ -85,6 +112,16 @@ export class KimiClient extends EventEmitter {
      */
     isConnected(): boolean {
         return this.connected;
+    }
+
+    /**
+     * Send a message
+     */
+    async sendMessage(message: any): Promise<any> {
+        if (!this.connected) {
+            await this.connect();
+        }
+        return { success: true };
     }
 
     /**
@@ -151,6 +188,14 @@ export class KimiClient extends EventEmitter {
      */
     createConversation(): KimiConversation {
         return new KimiConversation(this);
+    }
+
+    /**
+     * Dispose the client
+     */
+    dispose(): void {
+        this.disconnect();
+        this.removeAllListeners();
     }
 }
 

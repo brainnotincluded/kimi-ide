@@ -86,12 +86,12 @@ export class PromptBuilder {
         const context: PromptContext = {
             systemPrompt: options?.systemPrompt,
             mentionedFiles: [],
-            autoContext: resolvedContext.autoContext,
+            autoContext: resolvedContext.autoContext ?? { imports: [], relatedFiles: [], testFiles: [] },
             userMessage,
         };
 
         // Разрешение упомянутых файлов
-        for (const mention of resolvedContext.mentions) {
+        for (const mention of resolvedContext.mentions ?? []) {
             const fileContext = await this.resolveMentionToFileContext(mention);
             if (fileContext) {
                 context.mentionedFiles.push(fileContext);
@@ -233,8 +233,8 @@ Files are provided in the following format:
             case 'file':
                 if (mention.content) {
                     return {
-                        uri: mention.value,
-                        relativePath: mention.value,
+                        uri: mention.value || '',
+                        relativePath: mention.value || '',
                         content: mention.content,
                     };
                 }
@@ -256,8 +256,8 @@ Files are provided in the following format:
                         }
                     }
                     return {
-                        uri: mention.value,
-                        relativePath: mention.value,
+                        uri: mention.value || '',
+                        relativePath: mention.value || '',
                         content: contents.join('\n\n'),
                     };
                 }
@@ -265,16 +265,16 @@ Files are provided in the following format:
 
             case 'symbol':
                 if (mention.symbols && mention.symbols.length > 0) {
-                    const symbol = mention.symbols[0];
+                    const symbolName = mention.symbols[0];
                     try {
-                        const uri = vscode.Uri.parse(symbol.uri);
-                        const context = await this.symbolProvider.getSymbolContext(uri, symbol.name);
+                        const uri = vscode.Uri.file(mention.path || '');
+                        const context = await this.symbolProvider.getSymbolContext(uri, symbolName);
                         if (context) {
                             return {
-                                uri: symbol.uri,
-                                relativePath: symbol.relativePath,
-                                content: context.content,
-                                symbols: [this.convertSymbolNodeToCodeSymbol(context.symbol)],
+                                uri: mention.path || '',
+                                relativePath: mention.path || '',
+                                content: context.content || '',
+                                symbols: [],
                             };
                         }
                     } catch {
@@ -425,11 +425,11 @@ Files are provided in the following format:
         }
 
         // Открытые файлы (кратко)
-        if (context.autoContext.openFiles.length > 0) {
+        if (context.autoContext.openFiles && context.autoContext.openFiles.length > 0) {
             parts.push('## Other Open Files\n');
             const fileNames = context.autoContext.openFiles
-                .filter(f => f.uri !== context.autoContext.currentFile?.uri)
-                .map(f => `- ${f.relativePath}`)
+                .filter((f: any) => f.uri !== context.autoContext.currentFile?.uri)
+                .map((f: any) => `- ${f.relativePath}`)
                 .join('\n');
             parts.push(fileNames);
         }
@@ -437,8 +437,8 @@ Files are provided in the following format:
         // Дерево файлов проекта
         if (this.config.includeFileTree) {
             const allFiles = [
-                ...context.mentionedFiles.map(f => f.relativePath),
-                ...context.autoContext.relatedFiles.map(f => f.relativePath),
+                ...context.mentionedFiles.map((f: FileContext) => f.relativePath),
+                ...context.autoContext.relatedFiles.map((f: any) => f.relativePath || f),
                 ...(context.autoContext.currentFile ? [context.autoContext.currentFile.relativePath] : []),
             ];
             if (allFiles.length > 0) {

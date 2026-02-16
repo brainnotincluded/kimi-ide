@@ -79,14 +79,19 @@ export class TestingAgent extends BaseAgent {
     ): Promise<TOutput> {
         const request = input as unknown as TestingRequest;
         const result: TestingResult = {
-            generated: false,
+            success: false,
+            generated: [],
+            execution: [],
             tests: [],
+            executionResults: [],
+            coverage: { overall: 0, files: [] },
+            summary: { total: 0, passed: 0, failed: 0, skipped: 0 },
         };
         
         // Step 1: Generate tests if requested
         if (request.generateTests !== false) {
             result.tests = await this.generateTests(request, signal);
-            result.generated = result.tests.length > 0;
+            result.generated = result.tests;
         }
         
         if (signal.aborted) {
@@ -95,7 +100,9 @@ export class TestingAgent extends BaseAgent {
         
         // Step 2: Run tests if requested
         if (request.runTests !== false) {
-            result.execution = await this.runTests(request, signal);
+            const execResult = await this.runTests(request, signal);
+            result.executionResults = [execResult];
+            result.execution = [execResult];
         }
         
         if (signal.aborted) {
@@ -288,11 +295,12 @@ export class TestingAgent extends BaseAgent {
         
         return {
             id: `test_${unit.name}_${Date.now()}`,
+            name: unit.name,
             filePath: testFilePath,
+            type: (testType || 'unit') as 'unit' | 'integration' | 'e2e',
             testType,
-            targetFunction: unit.name,
             code: testCode,
-            fixtures,
+            fixtures: fixtures.map(f => f.name),
         };
     }
     
@@ -327,12 +335,14 @@ export class TestingAgent extends BaseAgent {
         const fixtures: TestFixture[] = [
             {
                 name: 'should handle valid input',
+                data: null,
                 input: this.generateMockInput(unit),
                 expectedOutput: this.generateMockOutput(unit),
                 description: 'Standard case',
             },
             {
                 name: 'should handle edge case',
+                data: null,
                 input: this.generateEdgeCaseInput(unit),
                 expectedOutput: null,
                 description: 'Edge case',
@@ -385,6 +395,7 @@ ${fixtures.map((f, i) => `
         const fixtures: TestFixture[] = [
             {
                 name: 'should handle valid input',
+                data: null,
                 input: this.generateMockInput(unit),
                 expectedOutput: this.generateMockOutput(unit),
             },
@@ -421,6 +432,7 @@ ${fixtures.map(f => `
         const fixtures: TestFixture[] = [
             {
                 name: 'test_valid_input',
+                data: null,
                 input: this.generateMockInput(unit),
                 expectedOutput: this.generateMockOutput(unit),
             },
@@ -542,6 +554,7 @@ def test_error_handling():
         const workspaceFolder = this.vscodeContext.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) {
             return {
+                testId: 'none',
                 success: false,
                 total: 0,
                 passed: 0,
@@ -556,16 +569,14 @@ def test_error_handling():
         const testFile = this.findTestFile(request.filePath);
         if (!testFile) {
             return {
+                testId: 'no-test-file',
                 success: false,
                 total: 0,
                 passed: 0,
                 failed: 0,
                 skipped: 0,
                 durationMs: 0,
-                failures: [{
-                    testId: 'no-test-file',
-                    message: 'No test file found',
-                }],
+                failures: ['No test file found'],
             };
         }
         
@@ -658,6 +669,7 @@ def test_error_handling():
      */
     private parseTestResults(output: string): TestExecutionResult {
         const result: TestExecutionResult = {
+            testId: 'parsed',
             success: false,
             total: 0,
             passed: 0,
@@ -686,10 +698,7 @@ def test_error_handling():
         const failureRegex = /✕\s+(.+)|FAIL\s+(.+)/g;
         let match;
         while ((match = failureRegex.exec(output)) !== null) {
-            result.failures.push({
-                testId: match[1] || match[2],
-                message: 'Test failed',
-            });
+            result.failures!.push(match[1] || match[2] || 'unknown');
         }
         
         // Parse pytest output
@@ -699,10 +708,10 @@ def test_error_handling():
             
             if (pytestMatch) result.passed = parseInt(pytestMatch[1], 10);
             if (pytestFailMatch) result.failed = parseInt(pytestFailMatch[1], 10);
-            result.total = result.passed + result.failed;
+            result.total = (result.passed || 0) + (result.failed || 0);
         }
         
-        result.success = result.failed === 0 && result.total > 0;
+        result.success = (result.failed || 0) === 0 && (result.total || 0) > 0;
         
         return result;
     }
@@ -719,6 +728,7 @@ def test_error_handling():
         if (!workspaceFolder) {
             return {
                 overall: 0,
+                files: [],
                 byFile: {},
                 byFunction: {},
             };
@@ -728,7 +738,7 @@ def test_error_handling():
             // Try to run tests with coverage
             const testFile = this.findTestFile(request.filePath);
             if (!testFile) {
-                return { overall: 0, byFile: {}, byFunction: {} };
+                return { overall: 0, files: [], byFile: {}, byFunction: {} };
             }
             
             const command = await this.determineCoverageCommand(testFile);
@@ -748,6 +758,7 @@ def test_error_handling():
             // Return empty coverage if command fails
             return {
                 overall: 0,
+                files: [],
                 byFile: {},
                 byFunction: {},
             };
@@ -791,6 +802,7 @@ def test_error_handling():
     private parseCoverageOutput(output: string, filePath: string): CoverageReport {
         const report: CoverageReport = {
             overall: 0,
+            files: [],
             byFile: {},
             byFunction: {},
         };
@@ -807,12 +819,7 @@ def test_error_handling():
         while ((match = fileRegex.exec(output)) !== null) {
             const file = match[1].trim();
             if (file && file !== 'File') {
-                report.byFile[file] = {
-                    statements: parseFloat(match[2]),
-                    branches: parseFloat(match[3]),
-                    functions: parseFloat(match[4]),
-                    lines: parseFloat(match[5]),
-                };
+                report.byFile![file] = parseFloat(match[5]);
             }
         }
         
@@ -827,7 +834,7 @@ def test_error_handling():
         // Testing agent is ready immediately
     }
     
-    protected onMessage<T>(message: AgentMessage<T>): void {
+    protected onMessage(message: AgentMessage): void {
         this.log('Received message:', message.type);
     }
     

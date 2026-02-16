@@ -137,7 +137,7 @@ export class ReviewerAgent extends BaseAgent {
         
         // Check if this is a TypeScript file
         if (!this.isTypeScriptFile(request.filePath)) {
-            return { type: 'typecheck', status: 'skipped', durationMs: 0, issues: 0 };
+            return { check: 'typecheck', passed: true, type: 'typecheck', status: 'skipped', durationMs: 0, issues: [] };
         }
         
         try {
@@ -167,11 +167,13 @@ export class ReviewerAgent extends BaseAgent {
             const errors = this.parseTypeScriptErrors(output, request.filePath);
             
             return {
+                check: 'typecheck',
+                passed: errors.length === 0,
                 type: 'typecheck',
                 status: errors.length > 0 ? 'failed' : 'passed',
                 durationMs: Date.now() - startTime,
                 output,
-                issues: errors.length,
+                issues: errors,
             };
             
         } catch (error) {
@@ -181,20 +183,24 @@ export class ReviewerAgent extends BaseAgent {
                 const errors = this.parseTypeScriptErrors(output, request.filePath);
                 
                 return {
+                    check: 'typecheck',
+                    passed: errors.length === 0,
                     type: 'typecheck',
                     status: errors.length > 0 ? 'failed' : 'passed',
                     durationMs: Date.now() - startTime,
                     output,
-                    issues: errors.length,
+                    issues: errors,
                 };
             }
             
             return {
+                check: 'typecheck',
+                passed: false,
                 type: 'typecheck',
                 status: 'failed',
                 durationMs: Date.now() - startTime,
                 output: String(error),
-                issues: 1,
+                issues: [],
             };
         }
     }
@@ -202,8 +208,8 @@ export class ReviewerAgent extends BaseAgent {
     /**
      * Парсинг ошибок TypeScript
      */
-    private parseTypeScriptErrors(output: string, filePath: string): Array<{ line: number; message: string }> {
-        const errors: Array<{ line: number; message: string }> = [];
+    private parseTypeScriptErrors(output: string, filePath: string): CodeIssue[] {
+        const errors: CodeIssue[] = [];
         const lines = output.split('\n');
         
         for (const line of lines) {
@@ -211,8 +217,14 @@ export class ReviewerAgent extends BaseAgent {
             const match = line.match(/\((\d+),(\d+)\):\s+error\s+(TS\d+):\s+(.+)/);
             if (match) {
                 errors.push({
+                    type: 'error',
+                    severity: 'high',
                     line: parseInt(match[1], 10),
+                    column: parseInt(match[2], 10),
+                    code: match[3],
                     message: `${match[3]}: ${match[4]}`,
+                    filePath,
+                    fixable: false,
                 });
             }
         }
@@ -229,7 +241,7 @@ export class ReviewerAgent extends BaseAgent {
         try {
             const workspaceFolder = this.vscodeContext.workspace.workspaceFolders?.[0];
             if (!workspaceFolder) {
-                return { type: 'lint', status: 'skipped', durationMs: 0, issues: 0 };
+                return { check: 'lint', passed: true, type: 'lint', status: 'skipped', durationMs: 0, issues: [] };
             }
             
             // Check if ESLint config exists
@@ -248,7 +260,7 @@ export class ReviewerAgent extends BaseAgent {
             }
             
             if (!hasEslint) {
-                return { type: 'lint', status: 'skipped', durationMs: 0, issues: 0 };
+                return { check: 'lint', passed: true, type: 'lint', status: 'skipped', durationMs: 0, issues: [] };
             }
             
             // Run ESLint
@@ -272,11 +284,13 @@ export class ReviewerAgent extends BaseAgent {
             }
             
             return {
+                check: 'lint',
+                passed: totalIssues === 0,
                 type: 'lint',
                 status: totalIssues > 0 ? 'failed' : 'passed',
                 durationMs: Date.now() - startTime,
                 output: stdout,
-                issues: totalIssues,
+                issues: [],
             };
             
         } catch (error) {
@@ -290,11 +304,13 @@ export class ReviewerAgent extends BaseAgent {
                     }
                     
                     return {
+                        check: 'lint',
+                        passed: totalIssues === 0,
                         type: 'lint',
                         status: totalIssues > 0 ? 'failed' : 'passed',
                         durationMs: Date.now() - startTime,
                         output: execError.stdout,
-                        issues: totalIssues,
+                        issues: [],
                     };
                 } catch {
                     // JSON parse failed
@@ -302,11 +318,13 @@ export class ReviewerAgent extends BaseAgent {
             }
             
             return {
+                check: 'lint',
+                passed: false,
                 type: 'lint',
                 status: 'failed',
                 durationMs: Date.now() - startTime,
                 output: String(error),
-                issues: 1,
+                issues: [],
             };
         }
     }
@@ -321,13 +339,13 @@ export class ReviewerAgent extends BaseAgent {
         const testFile = this.findTestFile(request.filePath, request.context?.testFiles);
         
         if (!testFile) {
-            return { type: 'test', status: 'skipped', durationMs: 0, issues: 0 };
+            return { check: 'test', passed: true, type: 'test', status: 'skipped', durationMs: 0, issues: [] };
         }
         
         try {
             const workspaceFolder = this.vscodeContext.workspace.workspaceFolders?.[0];
             if (!workspaceFolder) {
-                return { type: 'test', status: 'skipped', durationMs: 0, issues: 0 };
+                return { check: 'test', passed: true, type: 'test', status: 'skipped', durationMs: 0, issues: [] };
             }
             
             // Check for test runner
@@ -362,11 +380,13 @@ export class ReviewerAgent extends BaseAgent {
             }
             
             return {
+                check: 'test',
+                passed: true,
                 type: 'test',
                 status: 'passed',
                 durationMs: Date.now() - startTime,
                 output: stdout + stderr,
-                issues: 0,
+                issues: [],
             };
             
         } catch (error) {
@@ -379,11 +399,13 @@ export class ReviewerAgent extends BaseAgent {
             const failures = this.parseTestFailures(output);
             
             return {
+                check: 'test',
+                passed: false,
                 type: 'test',
                 status: 'failed',
                 durationMs: Date.now() - startTime,
                 output,
-                issues: failures.length,
+                issues: [],
             };
         }
     }
@@ -454,18 +476,20 @@ export class ReviewerAgent extends BaseAgent {
         }
         
         return {
+            check: 'security',
+            passed: issues.length === 0,
             type: 'security',
             status: issues.length > 0 ? 'failed' : 'passed',
             durationMs: Date.now() - startTime,
-            issues: issues.length,
+            issues: issues,
         };
     }
     
     /**
      * Проверка безопасности (heuristics)
      */
-    private runSecurityHeuristics(request: ReviewRequest): Array<{ message: string }> {
-        const issues: Array<{ message: string }> = [];
+    private runSecurityHeuristics(request: ReviewRequest): CodeIssue[] {
+        const issues: CodeIssue[] = [];
         const content = request.modifiedContent ?? '';
         const contentLower = content.toLowerCase();
         
@@ -483,7 +507,13 @@ export class ReviewerAgent extends BaseAgent {
         
         for (const { pattern, message } of securityPatterns) {
             if (pattern.test(content)) {
-                issues.push({ message });
+                issues.push({
+                    type: 'warning',
+                    severity: 'medium',
+                    message,
+                    filePath: request.filePath,
+                    fixable: false,
+                });
             }
         }
         
@@ -510,10 +540,12 @@ export class ReviewerAgent extends BaseAgent {
                 if (lines > 50) {
                     issues.push({
                         id: `semantic_${Date.now()}`,
-                        severity: 'warning',
+                        type: 'warning',
+                        severity: 'medium',
                         category: 'style',
                         message: `Function is ${lines} lines long. Consider breaking it down.`,
                         filePath: request.filePath,
+                        fixable: false,
                     });
                 }
             }
@@ -523,10 +555,12 @@ export class ReviewerAgent extends BaseAgent {
         if (/console\.(log|debug|warn|error)\s*\(/.test(content)) {
             issues.push({
                 id: `semantic_${Date.now()}_console`,
-                severity: 'info',
+                type: 'info',
+                severity: 'low',
                 category: 'style',
                 message: 'Console statements found. Consider using a proper logging library.',
                 filePath: request.filePath,
+                fixable: false,
             });
         }
         
@@ -540,10 +574,12 @@ export class ReviewerAgent extends BaseAgent {
                 if (usageCount <= 1) {
                     issues.push({
                         id: `semantic_${Date.now()}_unused`,
-                        severity: 'warning',
+                        type: 'warning',
+                        severity: 'low',
                         category: 'style',
                         message: `Variable "${varName}" may be unused`,
                         filePath: request.filePath,
+                        fixable: false,
                     });
                 }
             }
@@ -568,11 +604,13 @@ export class ReviewerAgent extends BaseAgent {
             for (const error of tsErrors) {
                 issues.push({
                     id: `ts_${Date.now()}_${error.line}`,
-                    severity: 'error',
+                    type: 'error',
+                    severity: 'high',
                     category: 'type',
                     message: error.message,
                     filePath,
                     line: error.line,
+                    fixable: false,
                 });
             }
         }
@@ -584,13 +622,15 @@ export class ReviewerAgent extends BaseAgent {
                     for (const message of result.messages ?? []) {
                         issues.push({
                             id: `lint_${Date.now()}_${message.line}`,
-                            severity: message.severity === 2 ? 'error' : 'warning',
+                            type: message.severity === 2 ? 'error' : 'warning',
+                            severity: message.severity === 2 ? 'high' : 'medium',
                             category: 'lint',
                             message: message.message,
                             filePath: result.filePath ?? filePath,
                             line: message.line,
                             column: message.column,
                             code: message.ruleId,
+                            fixable: false,
                         });
                     }
                 }
@@ -604,10 +644,12 @@ export class ReviewerAgent extends BaseAgent {
             for (const failure of failures) {
                 issues.push({
                     id: `test_${Date.now()}`,
-                    severity: 'error',
+                    type: 'error',
+                    severity: 'high',
                     category: 'test',
                     message: `Test failure: ${failure}`,
                     filePath,
+                    fixable: false,
                 });
             }
         }
@@ -617,10 +659,12 @@ export class ReviewerAgent extends BaseAgent {
             for (const issue of securityIssues) {
                 issues.push({
                     id: `sec_${Date.now()}`,
-                    severity: 'warning',
+                    type: 'warning',
+                    severity: 'medium',
                     category: 'security',
                     message: issue.message,
                     filePath,
+                    fixable: false,
                 });
             }
         }
@@ -699,13 +743,15 @@ export class ReviewerAgent extends BaseAgent {
     /**
      * Создание ошибочного результата проверки
      */
-    private createErrorCheck(type: CheckResult['type'], error: unknown): CheckResult {
+    private createErrorCheck(type: string, error: unknown): CheckResult {
         return {
+            check: type,
+            passed: false,
             type,
             status: 'failed',
             durationMs: 0,
             output: String(error),
-            issues: 1,
+            issues: [],
         };
     }
     
@@ -725,7 +771,7 @@ export class ReviewerAgent extends BaseAgent {
         // Reviewer is ready immediately
     }
     
-    protected onMessage<T>(message: AgentMessage<T>): void {
+    protected onMessage(message: AgentMessage): void {
         this.log('Received message:', message.type);
     }
     
