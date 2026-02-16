@@ -99,13 +99,27 @@ function createWindow(): void {
  * Creates the application menu
  */
 function createMenu(): void {
+  const isMac = process.platform === 'darwin';
+  
+  const macAppMenu: Electron.MenuItemConstructorOptions = {
+    label: app.name,
+    submenu: [
+      { label: `About ${app.name}`, click: () => sendToRenderer('menu:about') },
+      { type: 'separator' },
+      { label: `Hide ${app.name}`, accelerator: 'Cmd+H', role: 'hide' },
+      { label: 'Hide Others', accelerator: 'Cmd+Alt+H', role: 'hideOthers' },
+      { type: 'separator' },
+      { label: `Quit ${app.name}`, accelerator: 'Cmd+Q', click: () => app.quit() }
+    ]
+  };
+  
   const template: Electron.MenuItemConstructorOptions[] = [
+    // macOS App Menu
+    ...(isMac ? [macAppMenu] : []),
     {
       label: 'File',
       submenu: [
-        { label: 'Open Folder', accelerator: 'Cmd+O', click: openFolder },
-        { type: 'separator' },
-        { label: 'Quit', accelerator: 'Cmd+Q', click: () => app.quit() }
+        { label: 'Open Folder', accelerator: 'Cmd+O', click: openFolder }
       ]
     },
     {

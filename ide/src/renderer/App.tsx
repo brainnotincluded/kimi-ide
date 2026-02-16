@@ -233,7 +233,7 @@ function App() {
                   </div>
                 </div>
                 
-                <h1 className="welcome-title">Kimi IDE IDE</h1>
+                <h1 className="welcome-title">Kimi IDE</h1>
                 <p className="welcome-subtitle">Code Editor</p>
                 
                 <div className="welcome-actions">
